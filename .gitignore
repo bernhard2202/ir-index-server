@@ -1,3 +1,7 @@
+# index and corpus
+index/*
+corpus/*
+
 .settings/
 .project
 .classpath
