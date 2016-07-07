@@ -3,7 +3,6 @@ package ch.eth.ir.indexserver.index;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
@@ -16,9 +15,10 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
-import org.apache.lucene.document.TextField;
 import org.apache.lucene.document.Field.Store;
+import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
@@ -34,7 +34,10 @@ public class TIPSTERCorpusIndexer {
 
 	/* index corpus into this directory */
 	static final File INDEX_DIR = new File("index");
+	/* the index writer */
 	private IndexWriter writer = null;
+	/* field type for document content */
+	FieldType contentFieldType = null;
 
 	public TIPSTERCorpusIndexer() {
 		IndexWriterConfig indexConfig = new IndexWriterConfig(new StandardAnalyzer());
@@ -44,6 +47,16 @@ public class TIPSTERCorpusIndexer {
 		} catch (IOException e) {
 			log.fatal("Creating index writer failed, index_dir = '"+INDEX_DIR.getAbsolutePath()+"'", e);
 		}
+		/* create special field type for content */
+		contentFieldType = new FieldType();
+		// indexes the documents and term frequencies but no offsets
+		contentFieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
+		contentFieldType.setStored(true);
+		contentFieldType.setStoreTermVectors(true);
+		contentFieldType.setTokenized(true);
+		// the freeze() call prevents further modifications in the future 
+		// without re-running this indexer
+		contentFieldType.freeze();
 	}
 
 	public void close() throws CorruptIndexException, IOException {
@@ -62,7 +75,7 @@ public class TIPSTERCorpusIndexer {
 		
 		// index file contents
 		//TODO: extract real content, remove meta information
-		Field contentField = new TextField(IndexFields.CONTENT, new StringReader(fileContent));
+		Field contentField = new Field(IndexFields.CONTENT, fileContent, contentFieldType);
 		// index file name
 		Field fileNameField = new StringField(IndexFields.TITLE, zipEntry.getName(), Store.YES);
 
