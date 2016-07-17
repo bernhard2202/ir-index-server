@@ -1,4 +1,4 @@
-package ch.eth.ir.indexserver.statistics;
+package ch.eth.ir.indexserver.demo;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -57,8 +57,10 @@ public class DemoStats {
 		return 0;
 	}
 	
-	public int getCollectionFrequency(String term) {
-		throw new UnsupportedOperationException();
+	public long getCollectionFrequency(String term) throws IOException {
+		log.debug("called getCollectionFrequency("+term+")");
+		Term luceneTerm = new Term(IndexFields.CONTENT, new BytesRef(term));
+		return indexReader.totalTermFreq(luceneTerm);
 	}
 	
 	public int getDocumentFrequency(String term) throws IOException {
@@ -81,12 +83,6 @@ public class DemoStats {
 			lenght += (int) termEnumerator.totalTermFreq();
 		}
 		return lenght;
-	}
-	public int getMeanTermFrequency(String term, String document) {
-		throw new UnsupportedOperationException();
-	}
-	public int getMaxTermFrequency(String term, String document) {
-		throw new UnsupportedOperationException();
 	}
 	
 	public static void main(String[] args) throws IOException {		
