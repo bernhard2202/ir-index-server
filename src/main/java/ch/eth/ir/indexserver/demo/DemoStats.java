@@ -14,13 +14,13 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
 
-import ch.eth.ir.indexserver.index.IndexFields;
+import ch.eth.ir.indexserver.index.IndexConstants;
 
 public class DemoStats {
 	private static Logger log = Logger.getLogger(DemoStats.class);
 	
 	private IndexReader indexReader = null;
-	private final String INDEX_DIR = "index";
+	private final String INDEX_DIR = IndexConstants.INDEX_DIR;
 	
 	public DemoStats() throws IOException {
 		File indexDirectory = new File(INDEX_DIR);
@@ -28,20 +28,14 @@ public class DemoStats {
 			log.fatal("Index directory '"+INDEX_DIR+"' does not exist!");
 			throw new FileNotFoundException("Index directory '"+INDEX_DIR+"' could not be found.");
 		}
-		try {
-			Directory index = FSDirectory.open(indexDirectory.toPath());
-			indexReader = DirectoryReader.open(index);
-			log.debug("instantiated index reader");
-		} catch (IOException e) {
-			log.fatal("Could not instantiate index reader (IOException)",e);
-			throw e;
-		}
+		Directory index = FSDirectory.open(indexDirectory.toPath());
+		indexReader = DirectoryReader.open(index);
 	}
 
 	public int getTermFrequency(String term, int docId) throws IOException{
-		log.debug("called getTermFrequency("+term+", "+docId+")");
+		log.info("called getTermFrequency("+term+", "+docId+")");
 		Terms docTerms = null;
-		docTerms = indexReader.getTermVector(docId, IndexFields.CONTENT);
+		docTerms = indexReader.getTermVector(docId, IndexConstants.CONTENT);
 		if (docTerms == null || docTerms.size() == 0) {
 			log.debug("doc '"+docId+"' not found or empty");
 			return 0;
@@ -58,21 +52,21 @@ public class DemoStats {
 	}
 	
 	public long getCollectionFrequency(String term) throws IOException {
-		log.debug("called getCollectionFrequency("+term+")");
-		Term luceneTerm = new Term(IndexFields.CONTENT, new BytesRef(term));
+		log.info("called getCollectionFrequency("+term+")");
+		Term luceneTerm = new Term(IndexConstants.CONTENT, new BytesRef(term));
 		return indexReader.totalTermFreq(luceneTerm);
 	}
 	
 	public int getDocumentFrequency(String term) throws IOException {
-		log.debug("called getDocumentFrequency("+term+")");
-		Term luceneTerm = new Term(IndexFields.CONTENT, new BytesRef(term));
+		log.info("called getDocumentFrequency("+term+")");
+		Term luceneTerm = new Term(IndexConstants.CONTENT, new BytesRef(term));
 		return indexReader.docFreq(luceneTerm);
 	}
 	
 	public int getDocumentLenght(int docId) throws IOException {
-		log.debug("called getDocumentLenght("+docId+")");
+		log.info("called getDocumentLenght("+docId+")");
 		Terms docTerms = null;
-		docTerms = indexReader.getTermVector(docId, IndexFields.CONTENT);
+		docTerms = indexReader.getTermVector(docId, IndexConstants.CONTENT);
 		if (docTerms == null || docTerms.size() == 0) {
 			log.debug("doc '"+docId+"' not found or empty");
 			return 0;

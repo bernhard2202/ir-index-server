@@ -33,7 +33,7 @@ public class TIPSTERCorpusIndexer {
 	private static Logger log = Logger.getLogger(TIPSTERCorpusIndexer.class);
 
 	/* index corpus into this directory */
-	static final File INDEX_DIR = new File("index");
+	static final File INDEX_DIR = new File(IndexConstants.INDEX_DIR);
 	/* the index writer */
 	private IndexWriter writer = null;
 	/* field type for document content */
@@ -65,7 +65,7 @@ public class TIPSTERCorpusIndexer {
 
 	/* index the entry of a zip file */
 	private void indexZipEntry(ZipFile zipFile, ZipEntry zipEntry) throws IOException {
-		log.debug("Indexing file: " + zipEntry.getName());
+		log.info("Indexing file: " + zipEntry.getName());
 		Document document = new Document();
 		
 		// extract the file content
@@ -75,9 +75,9 @@ public class TIPSTERCorpusIndexer {
 		
 		// index file contents
 		//TODO: extract real content, remove meta information
-		Field contentField = new Field(IndexFields.CONTENT, fileContent, contentFieldType);
+		Field contentField = new Field(IndexConstants.CONTENT, fileContent, contentFieldType);
 		// index file name
-		Field fileNameField = new StringField(IndexFields.TITLE, zipEntry.getName(), Store.YES);
+		Field fileNameField = new StringField(IndexConstants.TITLE, zipEntry.getName(), Store.YES);
 
 		document.add(contentField);
 		document.add(fileNameField);
@@ -123,7 +123,7 @@ public class TIPSTERCorpusIndexer {
 			}
 		}
 	    long endTime = System.currentTimeMillis();
-	    log.debug(indexer.writer.numDocs()+" files indexed; time taken: "+(endTime-startTime)+" ms");		
+	    log.info(indexer.writer.numDocs()+" files indexed; time taken: "+(endTime-startTime)+" ms");		
 		indexer.close();
 	}
 
