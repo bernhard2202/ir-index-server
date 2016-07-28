@@ -1,4 +1,4 @@
-package ch.eth.ir.indexserver.index;
+package ch.eth.ir.indexserver.index.writer;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,10 +24,12 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
+import ch.eth.ir.indexserver.index.IndexConstants;
+
 /**
  * Index writer for the TIPSTER corpus
- * Given the root directory all TIPSTER-zip-files are read and 
- * their contents added to a lucene index. 
+ * Given the root directory, all TIPSTER-zip-files are read and 
+ * their contents added written to an new index. 
  */
 public class TIPSTERCorpusIndexer {
 	private static Logger log = Logger.getLogger(TIPSTERCorpusIndexer.class);
