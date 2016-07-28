@@ -2,15 +2,22 @@ package ch.eth.ir.indexserver.index;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.inject.Singleton;
 
 import org.apache.log4j.Logger;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Terms;
+import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.BytesRef;
+
+import ch.eth.ir.indexserver.resource.beans.DocumentVectorBean;
 
 
 /**
@@ -46,12 +53,22 @@ public class IndexAPI {
 		searcher = new IndexSearcher(reader);		
 	}
 	
-	public IndexReader getReader() {
-		return reader;
-	}
 	
-	public IndexSearcher getSearcher() {
-		return searcher;
+	/**
+	 * 
+	 */
+	public DocumentVectorBean getDocumentVector(int docId) throws IOException {
+		Map<String, Long> documentVector = new HashMap<String, Long>();
+		Terms docTerms = reader.getTermVector(docId, IndexConstants.CONTENT);
+		if (docTerms == null || docTerms.size() == 0) {
+			return new DocumentVectorBean(docId, documentVector);
+		}
+		TermsEnum termEnumerator = docTerms.iterator();
+		BytesRef text = null;
+		while ((text = termEnumerator.next()) != null) {
+			documentVector.put(text.utf8ToString(), termEnumerator.totalTermFreq());
+		}
+		return new DocumentVectorBean(docId, documentVector);
 	}
 
 }
