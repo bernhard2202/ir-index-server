@@ -11,9 +11,22 @@
   <url>http://maven.apache.org</url>
 
   <properties>
+    <jersey.version>2.23.1</jersey.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
+  <dependencyManagement>
+      <dependencies>
+          <dependency>
+              <groupId>org.glassfish.jersey</groupId>
+              <artifactId>jersey-bom</artifactId>
+              <version>${jersey.version}</version>
+              <type>pom</type>
+              <scope>import</scope>
+          </dependency>
+      </dependencies>
+  </dependencyManagement>
+  
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
@@ -21,6 +34,18 @@
       <version>3.8.1</version>
       <scope>test</scope>
     </dependency>
+    
+    <!--  JERSEY -->
+    <dependency>
+      <groupId>org.glassfish.jersey.containers</groupId>
+      <artifactId>jersey-container-grizzly2-http</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.jersey.media</groupId>
+      <artifactId>jersey-media-moxy</artifactId>
+    </dependency>
+    
+    <!--  LUCENE -->
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-core</artifactId>
@@ -36,11 +61,15 @@
       <artifactId>lucene-queryparser</artifactId>
       <version>6.1.0</version>
     </dependency>
+    
+    <!-- Appache commons -->
 	<dependency>
 	    <groupId>commons-io</groupId>
 	    <artifactId>commons-io</artifactId>
 	    <version>2.5</version>
 	</dependency>
+	
+	<!-- LOG4J -->
 	<dependency>
 	    <groupId>log4j</groupId>
 	    <artifactId>log4j</artifactId>
