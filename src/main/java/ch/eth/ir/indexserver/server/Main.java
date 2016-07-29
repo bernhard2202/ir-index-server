@@ -17,7 +17,7 @@ import java.net.URI;
 public class Main {
 	
 	// Base URI the Grizzly HTTP server will listen on
-    public static final String BASE_URI = "http://localhost:7777/myapp/";
+    public static final String BASE_URI = "http://localhost:7777/ir-server/";
 	
     private static Logger log = Logger.getLogger(IndexAPI.class);
    

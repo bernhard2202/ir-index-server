@@ -11,6 +11,10 @@ import java.util.Map;
 import javax.inject.Singleton;
 
 import org.apache.log4j.Logger;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -27,20 +31,22 @@ import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
 
 import ch.eth.ir.indexserver.resource.beans.DocumentVectorBean;
+import ch.eth.ir.indexserver.resource.beans.QueryBean;
 import ch.eth.ir.indexserver.resource.beans.QueryResultBean;
 
 
 /**
  * Singleton class IndexAPI 
  * 
- * Interface between the web server and the Lucene index. Performs queries
- * retrieval against the index ands provides the results as Beans for the 
- * web service.
- * 
+ * Interface between the web server and the Lucene index. Performs queries and
+ * retrieval against the index ands provides the results as beans for the web 
+ * service.
  * 
  * Lucene's internal caching and optimizations require the existence of a 
  * single index reader and searcher. To avoid creating one reader per request,
- * this class is a singleton object and gets injected wherever needed.
+ * this class is designed as a singleton and gets injected wherever needed.
+ * Note since IndexReader and IndexSearcher are both thread-safe this class
+ * is thread safe as well.
  */
 @Singleton
 public class IndexAPI {
@@ -48,6 +54,7 @@ public class IndexAPI {
 	
 	private IndexReader reader = null;
 	private IndexSearcher searcher = null;
+	private Analyzer analyzer = null;
 	
 	public IndexAPI() {
 		File indexDirectory = new File(IndexConstants.INDEX_DIR);
@@ -65,8 +72,13 @@ public class IndexAPI {
 			reader = null;
 		}
 		searcher = new IndexSearcher(reader);		
+		analyzer = new StandardAnalyzer();
 	}
 	
+	/**
+	 * Builds a Lucene query which searches for all documents which contain at least
+	 * minimTermsShouldMatch terms of the given terms.
+	 */
 	private Query buildQuery(List<String> terms, int minimumTermsShouldMatch) {
 		log.info("called buildQuery(" + terms.toString() + ", " + minimumTermsShouldMatch + ")");
 
@@ -81,7 +93,7 @@ public class IndexAPI {
 	
 	
 	/**
-	 * 
+	 * Retrieves a document vector for a given documentID
 	 */
 	public DocumentVectorBean getDocumentVector(int docId) throws IOException {
 		Map<String, Long> documentVector = new HashMap<String, Long>();
@@ -97,6 +109,10 @@ public class IndexAPI {
 		return new DocumentVectorBean(docId, documentVector);
 	}
 	
+	/**
+	 * Returns all document id's of documents containing at least minimumTermsShouldMatch terms
+	 * of the given terms.
+	 */
 	public QueryResultBean findNOverlappingDocuments(int minimumTermsShouldMatch, List<String> terms) throws IOException {
 		log.info("called buildQuery(" + terms.toString() + ", " + minimumTermsShouldMatch + ")");
 		QueryResultBean result = new QueryResultBean();
@@ -120,6 +136,26 @@ public class IndexAPI {
 		Collections.shuffle(docIds);
 		result.addAllDocuments(docIds);
 		return result;
+	}
+	
+	/**
+	 * Applies the same preprocessing, word filtering and term splitting to the given query
+	 * as was used for the documents at building time of the index 
+	 * @throws IOException 
+	 */
+	public QueryBean preprocess(String query) throws IOException {
+		log.info("called processQuery(" + query + ")");
+		QueryBean terms = new QueryBean();
+		// create stream and add char term attribute
+		TokenStream stream = analyzer.tokenStream(IndexConstants.CONTENT, query);
+		CharTermAttribute cattr = stream.addAttribute(CharTermAttribute.class);
+		stream.reset();
+		while (stream.incrementToken()) {
+			terms.addQueryTerm(cattr.toString());
+		}
+		stream.end();
+		stream.close();
+		return terms;
 	}
 
 }
