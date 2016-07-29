@@ -26,7 +26,7 @@ public class DocumentResource {
 
 	@Inject
 	private IndexAPI indexAPI;
-
+	
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("vector")

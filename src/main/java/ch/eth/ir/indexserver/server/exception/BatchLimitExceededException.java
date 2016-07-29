@@ -15,6 +15,6 @@ public class BatchLimitExceededException extends WebApplicationException {
 	public BatchLimitExceededException() {
 		super(Response.status(Response.Status.UNAUTHORIZED).entity(String
 				.format("Maximum batch size is %d within a single request!", RequestProperties.MAX_BATCH_REQ_ALLOWED))
-				.type(MediaType.TEXT_PLAIN).build());
+				.type(MediaType.APPLICATION_JSON).build());
 	}
 }

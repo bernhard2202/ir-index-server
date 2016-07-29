@@ -11,11 +11,8 @@ import ch.eth.ir.indexserver.utilities.IndexReaderBinder;
 import java.io.IOException;
 import java.net.URI;
 
-import javax.inject.Inject;
-
 /**
- * Main class.
- *
+ * Main class for starting server
  */
 public class Main {
 	

@@ -5,6 +5,10 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/** 
+ * Encapsulates a number of Document Vector Beans {@see DocumentVectorBean}
+ * for responding batch requests.
+ */
 public class DocumentVectorBatch {
 	private List<DocumentVectorBean> documentVectors;
 

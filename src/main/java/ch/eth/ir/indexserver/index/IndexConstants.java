@@ -7,5 +7,4 @@ public class IndexConstants {
 	// Fields:
 	public final static String CONTENT = "content";
 	public final static String TITLE = "title";
-	//public final static String CONTENT = "content";
 }

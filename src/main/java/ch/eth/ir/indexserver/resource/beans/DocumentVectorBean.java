@@ -4,9 +4,20 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/** 
+ * Encapsulates a term vector for a single document. 
+ */
 public class DocumentVectorBean {
 	
+	/* the term vector for this document represented as a map
+	 * 		key = term
+	 * 		value = number of occurrences of the term in this document
+	 */
 	private Map<String, Long> termFrequencies;
+	
+	/* 
+	 * the document id
+	 */
 	private int id;
 	
 	public DocumentVectorBean(int docId, Map<String, Long> termFrequencies) { 
@@ -14,7 +25,7 @@ public class DocumentVectorBean {
 		this.id = docId;
 	} 
 	
-	@JsonProperty(value="id")
+	@JsonProperty(value="doc-id")
 	public int getId() {
 		return id;
 	}
