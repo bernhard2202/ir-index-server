@@ -23,6 +23,10 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.dom4j.DocumentException;
+import org.dom4j.Node;
+import org.dom4j.io.SAXReader;
+import org.glassfish.jersey.server.JSONP;
 
 import ch.eth.ir.indexserver.index.IndexConstants;
 
@@ -66,27 +70,38 @@ public class TIPSTERCorpusIndexer {
 	}
 
 	/* index the entry of a zip file */
-	private void indexZipEntry(ZipFile zipFile, ZipEntry zipEntry) throws IOException {
-		log.info("Indexing file: " + zipEntry.getName());
-		Document document = new Document();
+	private void indexZipEntry(ZipFile zipFile, ZipEntry zipEntry) throws IOException, DocumentException {
+		log.debug("Indexing file: " + zipEntry.getName());
 		
 		// extract the file content
 		InputStream contentStream = zipFile.getInputStream(zipEntry);
-		String fileContent = IOUtils.toString(contentStream, StandardCharsets.UTF_8);
+        SAXReader reader = new SAXReader();
+        org.dom4j.Document XMLDocument = reader.read(contentStream);
+        
+        if (XMLDocument==null) {
+        	return;
+        }
+
+        Node titleNode = XMLDocument.selectSingleNode( "/DOC/DOCNO");
+		Node contentNode = XMLDocument.selectSingleNode("/DOC/TEXT");
+		
+		String title = titleNode==null ? "" : titleNode.getText();
+		String content = contentNode==null ? "" : contentNode.getText();
+
 		IOUtils.closeQuietly(contentStream);
 		
 		// index file contents
-		//TODO: extract real content, remove meta information
-		Field contentField = new Field(IndexConstants.CONTENT, fileContent, contentFieldType);
+		Field contentField = new Field(IndexConstants.CONTENT, content.trim(), contentFieldType);
 		// index file name
-		Field fileNameField = new StringField(IndexConstants.TITLE, zipEntry.getName(), Store.YES);
-
+		Field fileNameField = new StringField(IndexConstants.TITLE, title.trim(), Store.YES);
+		
+		Document document = new Document();
 		document.add(contentField);
 		document.add(fileNameField);
 		writer.addDocument(document);
 	}
 
-	public static void main(String[] args) throws ZipException, IOException {
+	public static void main(String[] args) throws ZipException, IOException, DocumentException {
 	    /* sanity checks for corpus and index directory */
 		String usage = "java ch.eth.ir.indexserver.index.TIPSTERCorpusIndexer <corpus_directory>";
 	    if (args.length == 0) {
