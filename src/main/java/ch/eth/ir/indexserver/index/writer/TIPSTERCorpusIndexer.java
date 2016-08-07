@@ -3,7 +3,6 @@ package ch.eth.ir.indexserver.index.writer;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
@@ -26,7 +25,6 @@ import org.apache.lucene.store.FSDirectory;
 import org.dom4j.DocumentException;
 import org.dom4j.Node;
 import org.dom4j.io.SAXReader;
-import org.glassfish.jersey.server.JSONP;
 
 import ch.eth.ir.indexserver.index.IndexConstants;
 

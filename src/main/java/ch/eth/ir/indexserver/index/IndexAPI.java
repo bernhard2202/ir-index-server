@@ -80,8 +80,6 @@ public class IndexAPI {
 	 * minimTermsShouldMatch terms of the given terms.
 	 */
 	private Query buildQuery(List<String> terms, int minimumTermsShouldMatch) {
-		log.info("called buildQuery(" + terms.toString() + ", " + minimumTermsShouldMatch + ")");
-
 		BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
 		queryBuilder.setMinimumNumberShouldMatch(minimumTermsShouldMatch);
 		for (String term : terms) {
@@ -114,7 +112,6 @@ public class IndexAPI {
 	 * of the given terms.
 	 */
 	public QueryResultBean findNOverlappingDocuments(int minimumTermsShouldMatch, List<String> terms) throws IOException {
-		log.info("called buildQuery(" + terms.toString() + ", " + minimumTermsShouldMatch + ")");
 		QueryResultBean result = new QueryResultBean();
 		if (terms.size() < minimumTermsShouldMatch) {
 			log.warn("query will always be empty term.length < minimumTermsShouldMatch");
@@ -144,7 +141,6 @@ public class IndexAPI {
 	 * @throws IOException 
 	 */
 	public QueryBean preprocess(String query) throws IOException {
-		log.info("called processQuery(" + query + ")");
 		QueryBean terms = new QueryBean();
 		// create stream and add char term attribute
 		TokenStream stream = analyzer.tokenStream(IndexConstants.CONTENT, query);

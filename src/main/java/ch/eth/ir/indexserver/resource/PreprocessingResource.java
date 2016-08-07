@@ -1,7 +1,6 @@
 package ch.eth.ir.indexserver.resource;
 
 import java.io.IOException;
-import java.util.List;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;
