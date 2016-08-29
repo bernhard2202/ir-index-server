@@ -1,4 +1,4 @@
-package ch.eth.ir.indexserver.utilities;
+package ch.eth.ir.indexserver.server.utilities;
 
 import javax.inject.Singleton;
 

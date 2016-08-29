@@ -1,4 +1,4 @@
-package ch.eth.ir.indexserver.resource;
+package ch.eth.ir.indexserver.server.resource;
 
 import java.io.IOException;
 
@@ -10,7 +10,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import ch.eth.ir.indexserver.index.IndexAPI;
-import ch.eth.ir.indexserver.resource.beans.QueryBean;
+import ch.eth.ir.indexserver.server.resource.beans.QueryBean;
 
 @Path("preprocess")
 public class PreprocessingResource {

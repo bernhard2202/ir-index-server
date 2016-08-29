@@ -4,7 +4,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 
 import ch.eth.ir.indexserver.server.exception.IOExceptionMapper;
-import ch.eth.ir.indexserver.utilities.IndexReaderBinder;
+import ch.eth.ir.indexserver.server.utilities.IndexReaderBinder;
 
 public class ApplicationResourceConfig extends ResourceConfig {
 

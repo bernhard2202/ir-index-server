@@ -1,4 +1,4 @@
-package ch.eth.ir.indexserver.resource.beans;
+package ch.eth.ir.indexserver.server.resource.beans;
 
 import java.util.ArrayList;
 import java.util.Collection;

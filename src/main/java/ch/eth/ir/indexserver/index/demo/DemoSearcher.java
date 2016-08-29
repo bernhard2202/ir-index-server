@@ -1,4 +1,4 @@
-package ch.eth.ir.indexserver.demo;
+package ch.eth.ir.indexserver.index.demo;
 
 import java.io.File;
 import java.io.FileNotFoundException;

@@ -30,9 +30,9 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
 
-import ch.eth.ir.indexserver.resource.beans.DocumentVectorBean;
-import ch.eth.ir.indexserver.resource.beans.QueryBean;
-import ch.eth.ir.indexserver.resource.beans.QueryResultBean;
+import ch.eth.ir.indexserver.server.resource.beans.DocumentVectorBean;
+import ch.eth.ir.indexserver.server.resource.beans.QueryBean;
+import ch.eth.ir.indexserver.server.resource.beans.QueryResultBean;
 
 
 /**
