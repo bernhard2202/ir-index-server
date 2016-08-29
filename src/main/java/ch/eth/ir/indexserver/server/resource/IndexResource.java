@@ -25,7 +25,8 @@ public class IndexResource {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("query")
-	public QueryResultBean findIdsForQuery(@QueryParam("minOverlap") int nOverlap, @QueryParam("term") List<String> query) throws IOException {
+	public QueryResultBean findIdsForQuery(@QueryParam("minOverlap") int nOverlap,
+			@QueryParam("term") List<String> query) throws IOException {
 		return indexAPI.findNOverlappingDocuments(nOverlap, query);
 	}
 

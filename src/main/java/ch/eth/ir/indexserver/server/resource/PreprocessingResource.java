@@ -11,6 +11,7 @@ import javax.ws.rs.core.MediaType;
 
 import ch.eth.ir.indexserver.index.IndexAPI;
 import ch.eth.ir.indexserver.server.resource.beans.QueryBean;
+import ch.eth.ir.indexserver.server.security.Secured;
 
 @Path("preprocess")
 public class PreprocessingResource {
@@ -20,6 +21,7 @@ public class PreprocessingResource {
 	
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
+	@Secured
 	public QueryBean preprocessQuery(@QueryParam("query")String query) throws IOException {
 		return indexApi.preprocess(query);
 	}
