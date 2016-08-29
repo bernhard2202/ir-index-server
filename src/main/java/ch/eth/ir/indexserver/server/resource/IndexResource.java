@@ -12,10 +12,12 @@ import javax.ws.rs.core.MediaType;
 
 import ch.eth.ir.indexserver.index.IndexAPI;
 import ch.eth.ir.indexserver.server.resource.beans.QueryResultBean;
+import ch.eth.ir.indexserver.server.security.Secured;
 
 /** 
  * Resource for direct retrieval requests from the index
  */
+@Secured
 @Path("index")
 public class IndexResource {
 	

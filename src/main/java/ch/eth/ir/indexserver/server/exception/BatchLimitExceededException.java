@@ -13,7 +13,7 @@ import ch.eth.ir.indexserver.server.RequestProperties;
  */
 public class BatchLimitExceededException extends WebApplicationException {
 	public BatchLimitExceededException() {
-		super(Response.status(Response.Status.UNAUTHORIZED).entity(String
+		super(Response.status(Response.Status.BAD_REQUEST).entity(String
 				.format("Maximum batch size is %d within a single request!", RequestProperties.MAX_BATCH_REQ_ALLOWED))
 				.type(MediaType.APPLICATION_JSON).build());
 	}

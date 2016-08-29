@@ -14,10 +14,12 @@ import ch.eth.ir.indexserver.index.IndexAPI;
 import ch.eth.ir.indexserver.server.RequestProperties;
 import ch.eth.ir.indexserver.server.exception.BatchLimitExceededException;
 import ch.eth.ir.indexserver.server.resource.beans.DocumentVectorBatch;
+import ch.eth.ir.indexserver.server.security.Secured;
 
 /**
  * Resource for requests on indexed documents
  */
+@Secured
 @Path("document")
 public class DocumentResource {
 
