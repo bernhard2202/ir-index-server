@@ -11,7 +11,9 @@ import javax.ws.rs.core.MediaType;
 
 import ch.eth.ir.indexserver.index.IndexAPI;
 import ch.eth.ir.indexserver.server.resource.beans.QueryBean;
+import ch.eth.ir.indexserver.server.security.Secured;
 
+@Secured
 @Path("preprocess")
 public class PreprocessingResource {
 	

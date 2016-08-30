@@ -6,6 +6,8 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import ch.eth.ir.indexserver.index.IndexAPI;
+import ch.eth.ir.indexserver.server.config.ApplicationResourceConfig;
+import ch.eth.ir.indexserver.server.security.UserProperties;
 
 import java.io.IOException;
 import java.net.URI;
@@ -38,6 +40,7 @@ public class Main {
 	}
 
 	public static void main(String[] args) throws IOException {
+		UserProperties.load("lalelu"); //TODO
 		final HttpServer server = startServer();
 
 		log.info(String.format("Jersey app started with WADL available at " + "%s\nHit enter to stop it...", BASE_URI));
