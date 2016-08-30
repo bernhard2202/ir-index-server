@@ -1,4 +1,4 @@
-package ch.eth.ir.indexserver.server;
+package ch.eth.ir.indexserver.server.config;
 
 public class RequestProperties {
 	/**

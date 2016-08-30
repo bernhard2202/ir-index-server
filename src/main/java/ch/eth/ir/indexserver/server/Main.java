@@ -6,6 +6,7 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import ch.eth.ir.indexserver.index.IndexAPI;
+import ch.eth.ir.indexserver.server.config.ApplicationResourceConfig;
 import ch.eth.ir.indexserver.server.security.UserProperties;
 
 import java.io.IOException;

@@ -3,7 +3,7 @@ package ch.eth.ir.indexserver.server.exception;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
-import ch.eth.ir.indexserver.server.RequestProperties;
+import ch.eth.ir.indexserver.server.config.RequestProperties;
 
 public class UnauthorizedAccessException extends WebApplicationException {
 	public UnauthorizedAccessException() {
