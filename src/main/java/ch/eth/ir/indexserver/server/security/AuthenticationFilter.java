@@ -1,7 +1,6 @@
 package ch.eth.ir.indexserver.server.security;
 
 import javax.annotation.Priority;
-import javax.inject.Inject;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.HttpHeaders;
@@ -11,15 +10,17 @@ import ch.eth.ir.indexserver.server.exception.UnauthorizedAccessException;
 
 import javax.ws.rs.Priorities;
 
-
+/**
+ * Authentication filter is used to filter unauthorized requests
+ * Valid request provide a HTTP authorization head of the following 
+ * form: Barer <token>, where token is valid token belonging to an 
+ * user
+ */
 @Secured
 @Provider
 @Priority(Priorities.AUTHENTICATION)
 public class AuthenticationFilter implements ContainerRequestFilter {
 	
-	@Inject
-	private UserProperties userProperties;
-
 	public void filter(ContainerRequestContext requestContext) {
         String authorizationHeader = 
             requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
@@ -31,7 +32,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         String token = authorizationHeader.substring(6).trim();
 
         try {
-        	if (!userProperties.validateToken(token)) {
+        	if (!UserProperties.validateToken(token)) {
         		throw new UnauthorizedAccessException();
         	}
         } catch (Exception e) {

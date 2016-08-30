@@ -11,6 +11,5 @@ public class IndexReaderBinder extends AbstractBinder {
     @Override
     protected void configure() {
         bind(IndexAPI.class).to(IndexAPI.class).in(Singleton.class);
-        bind(UserProperties.class).to(UserProperties.class).in(Singleton.class);
     }
 }

@@ -103,5 +103,12 @@
 			<artifactId>lucene-demos</artifactId>
 			<version>3.0.3</version>
 		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/org.jasypt/jasypt -->
+		<dependency>
+		    <groupId>org.jasypt</groupId>
+		    <artifactId>jasypt</artifactId>
+		    <version>1.9.2</version>
+		</dependency>
 	</dependencies>
 </project>
