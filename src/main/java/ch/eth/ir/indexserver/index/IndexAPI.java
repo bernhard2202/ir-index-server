@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.inject.Singleton;
+import javax.naming.OperationNotSupportedException;
 
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
@@ -153,5 +154,29 @@ public class IndexAPI {
 		stream.close();
 		return terms;
 	}
-
+	
+	
+	public int getDocumentFrequency(String term) {
+		throw new UnsupportedOperationException();
+	}
+	
+	public int getCollectionFrequency(String term) {
+		throw new UnsupportedOperationException();
+	}
+	
+	public int getNumberOfDocuments() {
+		throw new UnsupportedOperationException();
+	}
+	
+	public int getTotalNumberOfTerms() {
+		throw new UnsupportedOperationException();
+	}
+	
+	public int getNumberOfDistinctTerms() {
+		throw new UnsupportedOperationException();
+	}
+	
+	public int getAverageDocumentLength() {
+		throw new UnsupportedOperationException();
+	}
 }
