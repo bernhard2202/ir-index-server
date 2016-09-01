@@ -15,85 +15,120 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 
+import org.jasypt.encryption.StringEncryptor;
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.jasypt.properties.EncryptableProperties;
 
 
+/**
+ * Command line tool to add and remove existing users
+ * or refresh their tokens
+ */
 public class UserPropertiesWriter {
 	
+	/* 
+	 * map storing user credentials 
+	 * name -> token
+	 */
 	private static Map<String, String> credentials = new HashMap<String,String>();
+
+	// used to issue random tokens
+	private static Random random = new SecureRandom();
+
+	/*
+	 * Generates and returns a new random token 
+	 */
+	private static String getNewToken() {
+		return new BigInteger(130, random).toString(32);
+	}
 	
-	// make main loop with input:
-	// exit - leave
-	// add 
-		// gimme user-name: (if already exists then replace, otherwise add new)
-		// token issued:
-	// write
-	// list
-		// prints all users and decrypted tokens
-
-	public static void main(String[] args) throws IOException {				
-		Random random = new SecureRandom();
-
-		if (args == null || args.length != 1) {
-			System.err.println("provide a password!");
-			System.exit(-1);
-		}		
-		StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();     
-		encryptor.setPassword(args[0]);
-
+	
+	/*
+	 * loads an existing properties file and returns the number of loaded users
+	 */
+	private static int loadUsers(String filename, StringEncryptor encryptor) throws IOException {
 		Properties props = new EncryptableProperties(encryptor); 
 		try {
-			props.load(new FileInputStream("./users.properties")); 
+			props.load(new FileInputStream(filename)); 
 		} catch (FileNotFoundException e) {
 			// ignore if no properties file exists no user will be 
 			// loaded but this is not an error
+			return 0;
 		}
-		System.out.println("Reading current configuration....");
 		
 		int i = 1;
 		while ((props.getProperty("user."+i+".name")) != null) {
 		  String user = props.getProperty("user."+i+".name");
 		  String token = props.getProperty("user."+i+".token");
 		  if (user != null && token != null) {
-			  System.out.println("loaded: "+user);
 			  credentials.put(user,token);
 		  }
 		  i++;
 		}
+		return i-1;
+	}
+	
+	/* persists users to properties file and returns number of persisted users*/
+	private static int persistProperties(String filename, StringEncryptor encryptor) throws IOException {
+		OutputStream stream = new FileOutputStream(new File(filename));
+		Properties props = new Properties();
+		int i=0;
+		for (Map.Entry<String,String> entry : credentials.entrySet()) {
+			i++;
+			props.setProperty("user."+i+".name", entry.getKey());
+			props.setProperty("user."+i+".token", "ENC("+encryptor.encrypt(entry.getValue())+")");
+		} 
+		props.store(stream, "User credentials for Authentification");
+		stream.close();	
+		return i;
+	}
+	
+	/* adds or updates user and returns the new issued token */
+	private static String addOrUpdateUser(String name) {
+		String token = getNewToken();
+		credentials.put(name, token);
+		return token;
+	}
+	
+	/*
+	 * run UserPropertiesWriter <path to properties file> <password>
+	 */
+	public static void main(String[] args) throws IOException {				
+		if (args == null || args.length != 2) {
+			System.err.println("provide filename and password");
+			System.exit(-1);
+		}	
 		
-		System.out.println(i-1+" users loaded!");
+		StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();     
+		encryptor.setPassword(args[1]);
+
+		// Load existing configuration
+		System.out.println("Reading current configuration ('"+args[0]+"')....");
+		int users = loadUsers(args[0], encryptor);
+		System.out.println(users+" users loaded!");
 		
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		
 		String nextCommand = "";
 		while (!nextCommand.equals("exit")){
 			System.out.println("\nEnter next command (type 'exit' to stop, 'help' for help):");
 			nextCommand = br.readLine().trim();
-			
 			if (nextCommand.equals("exit")) {
-				
+				break;
 			} else if (nextCommand.equals("print")) {
 				for (Map.Entry<String,String> entry : credentials.entrySet()) {
 					System.out.println(entry.getKey()+": "+entry.getValue());
 				}		
 			} else if (nextCommand.equals("persist")) {
-				OutputStream stream = new FileOutputStream(new File("./users.properties"));
-				props = new Properties();
-				i=0;
-				for (Map.Entry<String,String> entry : credentials.entrySet()) {
-					i++;
-					props.setProperty("user."+i+".name", entry.getKey());
-					props.setProperty("user."+i+".token", "ENC("+encryptor.encrypt(entry.getValue())+")");
-				} 
-				props.store(stream, "User credentials for Authentification");
-				stream.close();	
-				System.out.println(i+ " Users written to ./users.properties");
+				int persisted = persistProperties(args[0], encryptor);
+				System.out.println(persisted+ " Users written to ./users.properties");
 			} else if (nextCommand.startsWith("add ")) {
 				String username = nextCommand.substring(3).trim();
-				String token = new BigInteger(130, random).toString(32);
-				credentials.put(username, token);
-				System.out.println("Added user: "+username+"("+token+")");
+				if (credentials.containsKey(username)) {
+					System.out.println("user already exists, use 'remove' or 'refresh'");
+				} else {
+					String token = addOrUpdateUser(username);
+					System.out.println("Added user: "+username+"("+token+")");
+				}
 			} else if (nextCommand.startsWith("remove ")) {
 				String username = nextCommand.substring(6).trim();
 				if (username.equals("*")) {
@@ -104,18 +139,23 @@ public class UserPropertiesWriter {
 			} else if (nextCommand.startsWith("refresh ")) {
 				String username = nextCommand.substring(6).trim();
 				if (username.equals("*")) {
-					//TODO
-				} else {
-					String token = new BigInteger(130, random).toString(32);
-					credentials.put(username, token);
+					for (String user : credentials.keySet()) {
+						addOrUpdateUser(user);
+					}
+				} else if (credentials.containsKey(username)){
+					String token = addOrUpdateUser(username);
+					System.out.println("Updated user: "+username+"("+token+")");
 				}		
 			} else if (nextCommand.equals("help")) {
-				
+				System.out.println("persist\t\t\tpersists the user config");
+				System.out.println("print\t\t\tprints all users and keys");
+				System.out.println("add <username>\t\tadds a new user with the given name");
+				System.out.println("refresh <*|username>\trefreshes token for given user name or for all users (*)");
+				System.out.println("remove <*|username>\ttremoves the given user or all users (*)");
+				System.out.println("help\t\t\tshows this message");
 			} else {
 				System.out.println("Invalid command!");
 			}
 		}
-
-		
 	}
 }
