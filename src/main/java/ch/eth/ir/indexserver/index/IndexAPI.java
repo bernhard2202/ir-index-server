@@ -155,17 +155,33 @@ public class IndexAPI {
 		return terms;
 	}
 	
-	
-	public int getDocumentFrequency(String term) {
-		throw new UnsupportedOperationException();
+	/** 
+	 * Returns the document frequency for a given term
+	 * @param term
+	 * @return Document frequency of the term
+	 */
+	public int getDocumentFrequency(String term) throws IOException {
+		Term luceneTerm = new Term(IndexConstants.CONTENT, new BytesRef(term));
+		return reader.docFreq(luceneTerm);
 	}
 	
-	public int getCollectionFrequency(String term) {
-		throw new UnsupportedOperationException();
+	/** 
+	 * Returns the collection frequency for a given term
+	 * @param term
+	 * @return Collection frequency of the term
+	 */
+	public long getCollectionFrequency(String term) throws IOException {
+		Term luceneTerm = new Term(IndexConstants.CONTENT, new BytesRef(term));
+		return reader.totalTermFreq(luceneTerm);
 	}
 	
-	public int getNumberOfDocuments() {
-		throw new UnsupportedOperationException();
+	/**
+	 * Returns the number of documents in the collection
+	 * @return
+	 * @throws IOException
+	 */
+	public int getNumberOfDocuments() throws IOException {
+		return reader.getDocCount(IndexConstants.CONTENT);
 	}
 	
 	public int getTotalNumberOfTerms() {
