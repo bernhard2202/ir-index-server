@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.inject.Singleton;
-import javax.naming.OperationNotSupportedException;
 
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
@@ -184,7 +183,7 @@ public class IndexAPI {
 		return reader.getDocCount(IndexConstants.CONTENT);
 	}
 	
-	public int getTotalNumberOfTerms() {
+	public int getTotalNumberOfTerms() throws IOException {
 		throw new UnsupportedOperationException();
 	}
 	

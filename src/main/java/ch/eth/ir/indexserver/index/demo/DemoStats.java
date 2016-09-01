@@ -3,10 +3,17 @@ package ch.eth.ir.indexserver.index.demo;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.LeafReader;
+import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.ParallelLeafReader;
+import org.apache.lucene.index.SlowCodecReaderWrapper;
+import org.apache.lucene.index.StandardDirectoryReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
@@ -21,15 +28,17 @@ public class DemoStats {
 	
 	private IndexReader indexReader = null;
 	private final String INDEX_DIR = IndexConstants.INDEX_DIR;
+	private Directory indexDirectory = null;
 	
 	public DemoStats() throws IOException {
-		File indexDirectory = new File(INDEX_DIR);
-		if (!indexDirectory.exists()) {
+		File index = new File(INDEX_DIR);
+		if (!index.exists()) {
 			log.fatal("Index directory '"+INDEX_DIR+"' does not exist!");
 			throw new FileNotFoundException("Index directory '"+INDEX_DIR+"' could not be found.");
 		}
-		Directory index = FSDirectory.open(indexDirectory.toPath());
-		indexReader = DirectoryReader.open(index);
+
+		indexDirectory = FSDirectory.open(index.toPath());
+		indexReader = DirectoryReader.open(indexDirectory);
 	}
 
 	public int getTermFrequency(String term, int docId) throws IOException{
@@ -79,6 +88,31 @@ public class DemoStats {
 		return lenght;
 	}
 	
+	public void getTermCount() throws IOException {		
+		Map<String, Long> terms = new HashMap<String,Long>();
+
+		for (LeafReaderContext context : indexReader.leaves()) {
+			Terms leafTerms = context.reader().terms(IndexConstants.CONTENT);
+			TermsEnum termEnumerator = leafTerms.iterator();
+			BytesRef text = null;
+			while ((text = termEnumerator.next()) != null) {
+				String term = text.utf8ToString();
+				Long freq = termEnumerator.totalTermFreq(); 
+				if (terms.containsKey(term)) {
+					terms.put(term, terms.get(term)+freq);
+				} else {
+					terms.put(term, freq);
+				}
+			}
+		}
+		long total = 0;
+		for (Long c : terms.values()) {
+			total += c;
+		}
+		System.out.println("unique terms:" +terms.keySet().size());
+		System.out.println("total terms in index:"+total);
+	}
+	
 	public static void main(String[] args) throws IOException {		
 		long startTime, endTime;
 		int result;
@@ -104,6 +138,9 @@ public class DemoStats {
 		result = instance.getDocumentLenght(docid*2);
 		endTime = System.currentTimeMillis();
 		System.out.println("Result: " + result + ", in "+(endTime-startTime)+"ms");
+		
+		System.out.println("term stats");
+		instance.getTermCount();
 		
 	}
 }
