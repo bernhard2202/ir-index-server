@@ -1,12 +1,14 @@
 package ch.eth.ir.indexserver.index;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.inject.Singleton;
 
@@ -56,7 +58,12 @@ public class IndexAPI {
 	private IndexSearcher searcher = null;
 	private Analyzer analyzer = null;
 	
-	public IndexAPI() {
+	private int averageDocumentLenght = -1;
+	private long totalTokens = -1;
+	private long uniqueTokens = -1;
+	
+	
+	public IndexAPI() throws IOException {
 		File indexDirectory = new File(IndexConstants.INDEX_DIR);
 		Directory index;
 		try {
@@ -73,6 +80,14 @@ public class IndexAPI {
 		}
 		searcher = new IndexSearcher(reader);		
 		analyzer = new StandardAnalyzer();
+		
+		Properties props = new Properties();
+		FileInputStream stream = new FileInputStream("./index/index.properties");
+		props.load(stream);
+		stream.close();
+		averageDocumentLenght = Integer.parseInt(props.getProperty("document.average.length"));
+		totalTokens = Long.parseLong(props.getProperty("terms.total"));
+		uniqueTokens = Long.parseLong(props.getProperty("terms.unique"));
 	}
 	
 	/**
@@ -183,15 +198,15 @@ public class IndexAPI {
 		return reader.getDocCount(IndexConstants.CONTENT);
 	}
 	
-	public int getTotalNumberOfTerms() throws IOException {
-		throw new UnsupportedOperationException();
+	public long getTotalNumberOfTerms() throws IOException {
+		return this.totalTokens;
 	}
 	
-	public int getNumberOfDistinctTerms() {
-		throw new UnsupportedOperationException();
+	public long getNumberOfUniqueTerms() {
+		return this.uniqueTokens;
 	}
 	
 	public int getAverageDocumentLength() {
-		throw new UnsupportedOperationException();
+		return this.averageDocumentLenght;
 	}
 }

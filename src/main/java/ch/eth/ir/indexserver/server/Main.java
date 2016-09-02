@@ -9,6 +9,7 @@ import ch.eth.ir.indexserver.index.IndexAPI;
 import ch.eth.ir.indexserver.server.config.ApplicationResourceConfig;
 import ch.eth.ir.indexserver.server.security.UserProperties;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
@@ -40,7 +41,24 @@ public class Main {
 	}
 
 	public static void main(String[] args) throws IOException {
-		UserProperties.load("lalelu"); //TODO
+		if (args.length < 2) {
+			System.err.println("ussage: Main <user.properties> <password>");
+			System.exit(-1);
+		}
+		
+		File index = new File("./index");
+		File userProperties = new File(args[0]);
+		File indexProperties = new File("./index/index.properties");
+		
+		if (!index.exists() || !userProperties.exists() || !indexProperties.exists()) {
+			System.err.println("make suere the following files/directories exists: ");
+			System.err.println("./index/ - index folder");
+			System.err.println("./index/index.properties - index properties");
+			System.err.println(args[0]+" - user properties");
+			System.exit(-1);
+		}
+		
+		UserProperties.load(args[0], args[1]); 
 		final HttpServer server = startServer();
 
 		log.info(String.format("Jersey app started with WADL available at %s\nHit enter to stop it...", BASE_URI));

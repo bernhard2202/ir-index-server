@@ -184,7 +184,7 @@ public class TIPSTERCorpusIndexer {
 		// average document length
 		int avgDl = getAverageDocumentLength(indexReader);	
 		
-		OutputStream stream = new FileOutputStream(new File("index.properties"));
+		OutputStream stream = new FileOutputStream(new File("./index/index.properties"));
 		Properties props = new Properties();
 		
 		props.setProperty("terms.total", String.valueOf(total));

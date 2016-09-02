@@ -26,13 +26,14 @@ public class UserProperties {
 	/**
 	 * read and load the encrypted properties file using the provided password
 	 */
-	public static void load(String password) throws IOException {
+	public static void load(String filename, String password) throws IOException {
 		encryptor = new StandardPBEStringEncryptor();
 		encryptor.setPassword(password);
 		credentials = new HashMap<String, String>();
 
 		Properties props = new EncryptableProperties(encryptor);
-		props.load(new FileInputStream("./users.properties"));
+		FileInputStream stream = new FileInputStream(filename);
+		props.load(stream);
 
 		int i = 1;
 		while ((props.getProperty("user." + i + ".name")) != null) {
@@ -44,6 +45,7 @@ public class UserProperties {
 			}
 			i++;
 		}
+		stream.close();
 	}
 
 	/**

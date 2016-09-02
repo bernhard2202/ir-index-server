@@ -49,7 +49,9 @@ public class UserPropertiesWriter {
 	private static int loadUsers(String filename, StringEncryptor encryptor) throws IOException {
 		Properties props = new EncryptableProperties(encryptor); 
 		try {
-			props.load(new FileInputStream(filename)); 
+			FileInputStream stream = new FileInputStream(filename);
+			props.load(stream); 
+			stream.close();
 		} catch (FileNotFoundException e) {
 			// ignore if no properties file exists no user will be 
 			// loaded but this is not an error
