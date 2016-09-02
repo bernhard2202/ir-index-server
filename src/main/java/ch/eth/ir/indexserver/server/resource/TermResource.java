@@ -54,4 +54,16 @@ public class TermResource {
 		}
 		return frequencyBatch;
 	}
+	
+	@GET
+	@Path("unique")
+	public long getUniqueTokensInIndex() throws IOException {
+		return indexAPI.getNumberOfUniqueTerms();
+	}
+	
+	@GET
+	@Path("total")
+	public long getTotalTokensInIndex() throws IOException {
+		return indexAPI.getTotalNumberOfTerms();
+	}
 }

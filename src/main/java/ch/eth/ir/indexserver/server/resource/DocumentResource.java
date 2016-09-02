@@ -39,4 +39,10 @@ public class DocumentResource {
 		}
 		return batchResponse;
 	}
+	
+	@GET
+	@Path("average-length")
+	public int getAverageDocumentLength() {
+		return indexAPI.getAverageDocumentLength();
+	}
 }
