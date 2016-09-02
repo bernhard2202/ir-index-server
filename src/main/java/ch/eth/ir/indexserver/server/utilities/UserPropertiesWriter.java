@@ -78,7 +78,7 @@ public class UserPropertiesWriter {
 			props.setProperty("user."+i+".name", entry.getKey());
 			props.setProperty("user."+i+".token", "ENC("+encryptor.encrypt(entry.getValue())+")");
 		} 
-		props.store(stream, "User credentials for Authentification");
+		props.store(stream, "User credentials for Authentification - do not change manually!");
 		stream.close();	
 		return i;
 	}

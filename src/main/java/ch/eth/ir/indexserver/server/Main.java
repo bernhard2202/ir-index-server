@@ -43,7 +43,7 @@ public class Main {
 		UserProperties.load("lalelu"); //TODO
 		final HttpServer server = startServer();
 
-		log.info(String.format("Jersey app started with WADL available at " + "%s\nHit enter to stop it...", BASE_URI));
+		log.info(String.format("Jersey app started with WADL available at %s\nHit enter to stop it...", BASE_URI));
 		System.in.read();
 
 		server.shutdownNow();

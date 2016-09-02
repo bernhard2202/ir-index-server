@@ -1,9 +1,14 @@
 package ch.eth.ir.indexserver.index.writer;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
@@ -17,11 +22,17 @@ import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexOptions;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.Terms;
+import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.BytesRef;
 import org.dom4j.DocumentException;
 import org.dom4j.Node;
 import org.dom4j.io.SAXReader;
@@ -31,7 +42,9 @@ import ch.eth.ir.indexserver.index.IndexConstants;
 /**
  * Index writer for the TIPSTER corpus
  * Given the root directory, all TIPSTER-zip-files are read and 
- * their contents added written to an new index. 
+ * their contents added written to an new index.
+ * Furthermore some statistics (which wont change but are time intense to extract) 
+ * are extracted and written to a properties file to safe runtime. 
  */
 public class TIPSTERCorpusIndexer {
 	private static Logger log = Logger.getLogger(TIPSTERCorpusIndexer.class);
@@ -98,6 +111,91 @@ public class TIPSTERCorpusIndexer {
 		document.add(fileNameField);
 		writer.addDocument(document);
 	}
+	
+	/**
+	 * Extracts a dictionary for the given index reader. The dictionary
+	 * maps every word in the corpus to the number of times it occurs 
+	 * @throws IOException 
+	 */
+	private Map<String, Long> getDictionary(IndexReader indexReader) throws IOException {
+		Map<String, Long> dict = new HashMap<String,Long>();
+		for (LeafReaderContext context : indexReader.leaves()) {
+			Terms leafTerms = context.reader().terms(IndexConstants.CONTENT);
+			TermsEnum termEnumerator = leafTerms.iterator();
+			BytesRef text = null;
+			while ((text = termEnumerator.next()) != null) {
+				String term = text.utf8ToString();
+				if (dict.containsKey(term)) {
+					dict.put(term, dict.get(term)+termEnumerator.totalTermFreq());
+				} else {
+					dict.put(term, termEnumerator.totalTermFreq());
+				}
+			}
+		}
+		return dict;
+	}
+	
+	private long getDocumentLenght(Terms docTerms) throws IOException {
+		if (docTerms == null) {
+			return 0;
+		}
+		TermsEnum termEnumerator = docTerms.iterator();
+		int lenght = 0;
+		while (termEnumerator.next() != null) {	
+			lenght += (int) termEnumerator.totalTermFreq();
+		}
+		return lenght;
+	}
+	
+	/** 
+	 * Extracts the average document length of the given index
+	 * @throws IOException 
+	 */
+	private int getAverageDocumentLength(IndexReader reader) throws IOException {
+		long length=0;
+		for (int docId = 0; docId<reader.getDocCount(IndexConstants.CONTENT); docId++) {
+			length += getDocumentLenght(reader.getTermVector(docId, IndexConstants.CONTENT));
+		}
+		return (int)(length/reader.getDocCount(IndexConstants.CONTENT));
+	}
+	
+	
+	/** 
+	 * extracts a number of constant index statistics and writes them to a file 
+	 * since they are comp. intense to extract and they wont change unless the
+	 * index gets rebuild we safe a lot of comp. time by doing this 
+	 */
+	private void writeIndexStatistics() throws IOException {
+		Directory indexDirectory = FSDirectory.open(INDEX_DIR.toPath());
+		IndexReader indexReader = DirectoryReader.open(indexDirectory);
+		
+		// get dictionary to extract statistics
+		Map<String, Long> terms = getDictionary(indexReader);
+		
+		// total number of tokens in index 
+		long total = 0;
+		for (Long c : terms.values()) {
+			total += c;
+		}
+		
+		// number of unique tokens in index
+		int unique = terms.keySet().size();
+		
+		// average document length
+		int avgDl = getAverageDocumentLength(indexReader);	
+		
+		OutputStream stream = new FileOutputStream(new File("index.properties"));
+		Properties props = new Properties();
+		
+		props.setProperty("terms.total", String.valueOf(total));
+		props.setProperty("terms.unique", String.valueOf(unique));
+		props.setProperty("document.average.length", String.valueOf(avgDl));
+		
+		props.store(stream, "IndexProperties - do not change manually!");
+		
+		stream.close();
+		indexReader.close();
+	}
 
 	public static void main(String[] args) throws ZipException, IOException, DocumentException {
 	    /* sanity checks for corpus and index directory */
@@ -140,6 +238,8 @@ public class TIPSTERCorpusIndexer {
 	    long endTime = System.currentTimeMillis();
 	    log.info(indexer.writer.numDocs()+" files indexed; time taken: "+(endTime-startTime)+" ms");		
 		indexer.close();
+		
+		log.info("write constant index statistics to properties file...");
+		indexer.writeIndexStatistics();
 	}
-
 }
