@@ -12,17 +12,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class QueryResultBean {
 	
 	private List<Integer> documentIds;
+	private int hits;
 	
 	public QueryResultBean() {
 		documentIds = new ArrayList<Integer>();
+		hits=0;
 	}
 	
 	public void addDocument(Integer id) {
 		documentIds.add(id);
+		hits++;
 	}
 
 	public void addAllDocuments(Collection<? extends Integer> ids) {
 		documentIds.addAll(ids);
+		hits = hits + ids.size();
 	}
 	
 	@JsonProperty(value="results")
@@ -32,6 +36,18 @@ public class QueryResultBean {
 	
 	@JsonProperty(value="totalHits")
 	public int getTotalHits() {
-		return documentIds.size();
+		return hits;
+	}
+
+	public List<Integer> getDocumentIds() {
+		return documentIds;
+	}
+
+	public void setDocumentIds(List<Integer> documentIds) {
+		this.documentIds = documentIds;
+	}
+	
+	public void setTotalHits(int hits) {
+		this.hits = hits;
 	}
 }

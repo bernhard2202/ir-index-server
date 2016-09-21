@@ -1,5 +1,6 @@
 package ch.eth.ir.indexserver.server.resource.beans;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -20,6 +21,10 @@ public class DocumentVectorBean {
 	 */
 	private int id;
 	
+	public DocumentVectorBean() {
+		termFrequencies = new HashMap<String, Long>();
+	}
+	
 	public DocumentVectorBean(int docId, Map<String, Long> termFrequencies) { 
 		this.termFrequencies = termFrequencies;
 		this.id = docId;
@@ -34,4 +39,12 @@ public class DocumentVectorBean {
     public Map<String, Long> getTermFrequencies() {
         return termFrequencies;
     }
+
+	public void setTermFrequencies(Map<String, Long> termFrequencies) {
+		this.termFrequencies = termFrequencies;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
 }

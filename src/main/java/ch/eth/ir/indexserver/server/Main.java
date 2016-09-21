@@ -12,17 +12,30 @@ import ch.eth.ir.indexserver.server.security.UserProperties;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Optional;
 
 /**
  * Main class for starting server
  */
 public class Main {
 
-	// Base URI the Grizzly HTTP server will listen on
-	public static final String BASE_URI = "http://localhost:7777/ir-server/";
 
 	private static Logger log = Logger.getLogger(IndexAPI.class);
-
+	
+	public static final String BASE_URI;
+    public static final String protocol;
+    public static final Optional<String> host;
+    public static final String path;
+    public static final Optional<String> port;
+   
+    static{
+        protocol = "http://";
+        host = Optional.ofNullable(System.getenv("HOSTNAME"));
+        port = Optional.ofNullable(System.getenv("PORT"));
+        path = "irserver";
+        BASE_URI = protocol + host.orElse("localhost") + ":" + port.orElse("8080") + "/" + path + "/";
+    }
+	
 	/**
 	 * Starts Grizzly HTTP server exposing JAX-RS resources defined in this
 	 * application.

@@ -1,5 +1,8 @@
 package ch.eth.ir.indexserver.client;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import javax.ws.rs.client.Client;
@@ -9,48 +12,108 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import ch.eth.ir.indexserver.server.resource.beans.DocumentVectorBatch;
+import ch.eth.ir.indexserver.server.resource.beans.QueryResultBean;
+
 public class Main {
 	public static void main(String[] args) {
 		Client client = ClientBuilder.newClient();
-		WebTarget target = client.target("http://localhost:7777/ir-server").path("document/vector");
+		WebTarget target = client.target("http://idvm-infk-hofmann04.inf.ethz.ch:8080/irserver/");
+//		WebTarget target = client.target("http://localhost:8080/irserver/");
 		Random rand = new Random();
 		
-		int requestNotOk = 0;
-		int i = 0;
-		long responseTime=0;
+		String credentials = "Bearer 1audh2egrg542je98292t92l35";
+//		String credentials = "Bearer svifpfvdl9fqso91t8fgs8432j";
+		int requestDocumentNotOk = 0;
+		int requestDocumentOk=0;
+		int requestQueryOk=0;
+		int requestQueryNotOk=0;
 		
-		int maxRequest = 60050;
+		int requestFailedWithException=0;
 		
-		for (; i < maxRequest; i++) {
+		int i = 1;
+		long responseTimeQuery=0;
+		long responseTimeDoc=0;
+
+		int maxRequest = 1000;
+		
+		for (; i < maxRequest+1; i++) {
 			try {
-				WebTarget requestTarget = target.queryParam("id", rand.nextInt(1078050)+1);
+				WebTarget requestTarget = target.path("document/vector");
+				for (int j=0; j<99; j++) {
+					requestTarget = requestTarget.queryParam("id", rand.nextInt(1078050)+1);
+				}
 				Invocation.Builder invocationBuilder =
 						requestTarget.request(MediaType.APPLICATION_JSON);
-				invocationBuilder.header("Authorization", "Bearer j2vsp3a99ot6p3ch7huip936n6");
+				invocationBuilder.header("Authorization", credentials);
 				
 				long startR = System.currentTimeMillis();
 				
 				Response response = invocationBuilder.get();
 				
-				responseTime += (System.currentTimeMillis()-startR);
+				responseTimeDoc += (System.currentTimeMillis()-startR);
 				
 				if (response.getStatus()!=200) {
-					requestNotOk++;
+					requestDocumentNotOk++;
+				} else {
+					requestDocumentOk++;
 				}
-				if(i%1000==0) {
+								
+				DocumentVectorBatch batch = response.readEntity(DocumentVectorBatch.class);
+				response.close();
+				
+				if (batch.getDocumentVectors().size() > 0) {
+					if (batch.getDocumentVectors().get(0).getTermFrequencies().size() > 3) {
+						Map<String, Long> termVector = batch.getDocumentVectors().get(0).getTermFrequencies();
+						List<String> terms = new ArrayList<String>();
+						terms.addAll(termVector.keySet());
+						
+						requestTarget = target.path("index/query");
+						
+						for (int j=0; j<4; j++) {
+							int index = rand.nextInt(termVector.size());
+							requestTarget = requestTarget.queryParam("term", terms.get(index));
+						}
+						requestTarget = requestTarget.queryParam("minOverlap", 2);
+						
+						invocationBuilder = requestTarget.request(MediaType.APPLICATION_JSON);
+						invocationBuilder.header("Authorization", credentials);
+						
+						
+						startR = System.currentTimeMillis();
+						response = invocationBuilder.get();
+						responseTimeQuery += (System.currentTimeMillis()-startR);
+						
+						@SuppressWarnings("unused")
+						QueryResultBean queryResult = response.readEntity(QueryResultBean.class);
+
+						if (response.getStatus()!=200) {
+							requestQueryNotOk++;
+						} else {
+							requestQueryOk++;
+						}
+						
+						response.close();
+					}
+				}
+
+				if(i%100==0) {
 					System.out.println(i+"/"+maxRequest);
 				}
-				Thread.sleep(2);
+				System.out.print(".");
 			} catch (Exception e) {
 				e.printStackTrace(System.err);
-				requestNotOk++;
+				requestFailedWithException++;
 				continue;
 			}
 		}
 		
-		System.out.println("Sent requests: "+i+" of "+maxRequest);
-		System.out.println("Successful responses (200): "+(i-requestNotOk));
-		System.out.println("Average response time per sent request: "+(responseTime/i) + "ms");
+		System.out.println("\nSuccesfull document vector requests: "+requestDocumentOk+"; Errors: "+requestDocumentNotOk);
+		System.out.println("Average resp. time:  "+(responseTimeDoc/(requestDocumentOk+requestDocumentNotOk+1)));
 		
+		System.out.println("Succesfull query requests: "+requestQueryOk+"; Errors: "+requestQueryNotOk);
+		System.out.println("Average resp. time:  "+(responseTimeQuery/(requestQueryOk+requestQueryNotOk+1)));
+
+		System.out.println("Failed requests: "+requestFailedWithException);
 	}
 }
