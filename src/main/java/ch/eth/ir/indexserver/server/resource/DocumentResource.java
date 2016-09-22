@@ -13,6 +13,7 @@ import javax.ws.rs.core.MediaType;
 import ch.eth.ir.indexserver.index.IndexAPI;
 import ch.eth.ir.indexserver.server.config.RequestProperties;
 import ch.eth.ir.indexserver.server.exception.BatchLimitExceededException;
+import ch.eth.ir.indexserver.server.exception.IllegalDocumentIdentifierException;
 import ch.eth.ir.indexserver.server.resource.beans.DocumentVectorBatch;
 import ch.eth.ir.indexserver.server.security.Secured;
 
@@ -31,10 +32,16 @@ public class DocumentResource {
 	@Path("vector")
 	public DocumentVectorBatch getDocumentVectors(@QueryParam("id") List<Integer> ids) throws IOException {
 		DocumentVectorBatch batchResponse = new DocumentVectorBatch();
+		int maxDocId = indexAPI.getNumberOfDocuments();
+		
 		if (ids.size() > RequestProperties.MAX_BATCH_REQ_ALLOWED) {
 			throw new BatchLimitExceededException();
 		}
+		
 		for (int id : ids) {
+			if (id < 0 || id > maxDocId) {
+				throw new IllegalDocumentIdentifierException();
+			}
 			batchResponse.addDocumentVector(indexAPI.getDocumentVector(id));
 		}
 		return batchResponse;

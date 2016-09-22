@@ -74,7 +74,7 @@ public class Main {
 							int index = rand.nextInt(termVector.size());
 							requestTarget = requestTarget.queryParam("term", terms.get(index));
 						}
-						requestTarget = requestTarget.queryParam("minOverlap", 2);
+						requestTarget = requestTarget.queryParam("minOverlap", 3);
 						
 						invocationBuilder = requestTarget.request(MediaType.APPLICATION_JSON);
 						invocationBuilder.header("Authorization", credentials);

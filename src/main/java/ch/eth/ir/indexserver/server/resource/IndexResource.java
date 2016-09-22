@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -32,14 +33,8 @@ public class IndexResource {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("query")
-	public QueryResultBean findIdsForQuery(@QueryParam("minOverlap") int nOverlap,
-			@QueryParam("term") List<String> query) throws IOException {
-		return indexAPI.findNOverlappingDocuments(nOverlap, query);
-	}
-	
-	@GET
-	public void asyncGetWithTimeout(@Suspended final AsyncResponse asyncResponse,
-			@QueryParam("minOverlap") final int nOverlap,
+	public void findIdsForQuery(@Suspended final AsyncResponse asyncResponse,
+			@DefaultValue("0") @QueryParam("minOverlap") final int nOverlap,
 			@QueryParam("term") final List<String> query) throws IOException{
 	    asyncResponse.setTimeoutHandler(new TimeoutHandler() {
 	    	
@@ -53,8 +48,17 @@ public class IndexResource {
 	    new Thread(new Runnable() {
 	 
 	        public void run() {
+	        	int minimumOverlap = nOverlap;
+	        	if (nOverlap > query.size()) {
+	        		asyncResponse.resume(Response.status(Response.Status.BAD_REQUEST)
+	        				.entity("minOverlap has to be between one and the query size").build());
+	        	}
+	        	// by default set it to query.size
+	        	if (nOverlap == 0) {
+	        		minimumOverlap = query.size();
+	        	}
 				try {
-					QueryResultBean result = indexAPI.findNOverlappingDocuments(nOverlap, query);
+					QueryResultBean result = indexAPI.findNOverlappingDocuments(minimumOverlap, query);
 		            asyncResponse.resume(result);
 				} catch (IOException e) {
 					asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
