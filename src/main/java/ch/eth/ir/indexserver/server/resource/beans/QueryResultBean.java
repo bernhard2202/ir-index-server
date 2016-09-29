@@ -29,16 +29,12 @@ public class QueryResultBean {
 		hits = hits + ids.size();
 	}
 	
-	@JsonProperty(value="results")
-	public List<Integer> getIds() {
-		return documentIds;
-	}
-	
 	@JsonProperty(value="totalHits")
 	public int getTotalHits() {
 		return hits;
 	}
-
+	
+	@JsonProperty(value="result")
 	public List<Integer> getDocumentIds() {
 		return documentIds;
 	}

@@ -61,6 +61,7 @@ public class IndexAPI {
 	private int averageDocumentLenght = -1;
 	private long totalTokens = -1;
 	private long uniqueTokens = -1;
+	private int documentCount = -1;
 	
 	
 	public IndexAPI() throws IOException {
@@ -80,6 +81,8 @@ public class IndexAPI {
 		}
 		searcher = new IndexSearcher(reader);		
 		analyzer = new StandardAnalyzer();
+		
+		documentCount = reader.getDocCount(IndexConstants.CONTENT);
 		
 		Properties props = new Properties();
 		FileInputStream stream = new FileInputStream("./index/index.properties");
@@ -195,7 +198,7 @@ public class IndexAPI {
 	 * @throws IOException
 	 */
 	public int getNumberOfDocuments() throws IOException {
-		return reader.getDocCount(IndexConstants.CONTENT);
+		return documentCount;
 	}
 	
 	public long getTotalNumberOfTerms() throws IOException {

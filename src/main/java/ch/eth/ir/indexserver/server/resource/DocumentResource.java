@@ -52,4 +52,10 @@ public class DocumentResource {
 	public int getAverageDocumentLength() {
 		return indexAPI.getAverageDocumentLength();
 	}
+	
+	@GET
+	@Path("count")
+	public int getDocumentCount() throws IOException {
+		return indexAPI.getNumberOfDocuments();
+	}
 }

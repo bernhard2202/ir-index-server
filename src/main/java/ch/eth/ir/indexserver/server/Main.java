@@ -64,7 +64,7 @@ public class Main {
 		File indexProperties = new File("./index/index.properties");
 		
 		if (!index.exists() || !userProperties.exists() || !indexProperties.exists()) {
-			System.err.println("make suere the following files/directories exists: ");
+			System.err.println("make suere the following files/directories exist: ");
 			System.err.println("./index/ - index folder");
 			System.err.println("./index/index.properties - index properties");
 			System.err.println(args[0]+" - user properties");

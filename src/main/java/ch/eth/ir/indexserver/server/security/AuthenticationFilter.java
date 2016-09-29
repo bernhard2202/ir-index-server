@@ -6,6 +6,8 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.ext.Provider;
 
+import org.apache.log4j.Logger;
+
 import ch.eth.ir.indexserver.server.exception.UnauthorizedAccessException;
 
 import javax.ws.rs.Priorities;
@@ -20,12 +22,14 @@ import javax.ws.rs.Priorities;
 @Provider
 @Priority(Priorities.AUTHENTICATION)
 public class AuthenticationFilter implements ContainerRequestFilter {
+	private static Logger log = Logger.getLogger(AuthenticationFilter.class);
 	
 	public void filter(ContainerRequestContext requestContext) {
         String authorizationHeader = 
             requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
 
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            log.warn("unauthorized attempt: Header:"+authorizationHeader);
             throw new UnauthorizedAccessException();
         }
         
@@ -36,7 +40,10 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         		throw new UnauthorizedAccessException();
         	}
         } catch (Exception e) {
+            log.warn("unauthorized attempt: Header:"+authorizationHeader);
             throw new UnauthorizedAccessException();
         }
+        UserProperties.increaseRequestCount(token);
+        log.info("user request with token: "+token);
 	}
 }
