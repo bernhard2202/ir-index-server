@@ -14,7 +14,7 @@ import ch.eth.ir.indexserver.index.IndexAPI;
 import ch.eth.ir.indexserver.server.config.RequestProperties;
 import ch.eth.ir.indexserver.server.exception.BatchLimitExceededException;
 import ch.eth.ir.indexserver.server.exception.IllegalDocumentIdentifierException;
-import ch.eth.ir.indexserver.server.resource.beans.DocumentVectorBatch;
+import ch.eth.ir.indexserver.server.response.DocumentVectorBatchResponse;
 import ch.eth.ir.indexserver.server.security.Secured;
 
 /**
@@ -30,8 +30,8 @@ public class DocumentResource {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("vector")
-	public DocumentVectorBatch getDocumentVectors(@QueryParam("id") List<Integer> ids) throws IOException {
-		DocumentVectorBatch batchResponse = new DocumentVectorBatch();
+	public DocumentVectorBatchResponse getDocumentVectors(@QueryParam("id") List<Integer> ids) throws IOException {
+		DocumentVectorBatchResponse batchResponse = new DocumentVectorBatchResponse();
 		int maxDocId = indexAPI.getNumberOfDocuments();
 		
 		if (ids.size() > RequestProperties.MAX_BATCH_REQ_ALLOWED) {

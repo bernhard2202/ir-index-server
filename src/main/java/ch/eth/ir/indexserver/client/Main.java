@@ -12,8 +12,8 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import ch.eth.ir.indexserver.server.resource.beans.DocumentVectorBatch;
-import ch.eth.ir.indexserver.server.resource.beans.QueryResultBean;
+import ch.eth.ir.indexserver.server.response.DocumentVectorBatchResponse;
+import ch.eth.ir.indexserver.server.response.QueryResultResponse;
 
 public class Main {
 	public static void main(String[] args) {
@@ -59,7 +59,7 @@ public class Main {
 					requestDocumentOk++;
 				}
 								
-				DocumentVectorBatch batch = response.readEntity(DocumentVectorBatch.class);
+				DocumentVectorBatchResponse batch = response.readEntity(DocumentVectorBatchResponse.class);
 				response.close();
 				
 				if (batch.getDocumentVectors().size() > 0) {
@@ -85,7 +85,7 @@ public class Main {
 						responseTimeQuery += (System.currentTimeMillis()-startR);
 						
 						@SuppressWarnings("unused")
-						QueryResultBean queryResult = response.readEntity(QueryResultBean.class);
+						QueryResultResponse queryResult = response.readEntity(QueryResultResponse.class);
 
 						if (response.getStatus()!=200) {
 							requestQueryNotOk++;

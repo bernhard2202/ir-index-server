@@ -1,4 +1,4 @@
-package ch.eth.ir.indexserver.server.resource.beans;
+package ch.eth.ir.indexserver.server.response;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,10 +8,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Encapsulates multiple document frequency beans for batch requests
  */
-public class FrequencyBatch {
+public class FrequencyBatchResponse extends AbstractResponse {
 	private List<FrequencyBean> frequencies;
 	
-	public FrequencyBatch() {
+	public FrequencyBatchResponse() {
 		frequencies = new ArrayList<FrequencyBean>();
 	}
 	

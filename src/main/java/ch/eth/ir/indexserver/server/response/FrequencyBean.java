@@ -1,4 +1,4 @@
-package ch.eth.ir.indexserver.server.resource.beans;
+package ch.eth.ir.indexserver.server.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

@@ -32,9 +32,9 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
 
-import ch.eth.ir.indexserver.server.resource.beans.DocumentVectorBean;
-import ch.eth.ir.indexserver.server.resource.beans.QueryBean;
-import ch.eth.ir.indexserver.server.resource.beans.QueryResultBean;
+import ch.eth.ir.indexserver.server.response.DocumentVectorBean;
+import ch.eth.ir.indexserver.server.response.QueryTermResponse;
+import ch.eth.ir.indexserver.server.response.QueryResultResponse;
 
 
 /**
@@ -129,8 +129,8 @@ public class IndexAPI {
 	 * Returns all document id's of documents containing at least minimumTermsShouldMatch terms
 	 * of the given terms.
 	 */
-	public QueryResultBean findNOverlappingDocuments(int minimumTermsShouldMatch, List<String> terms) throws IOException {
-		QueryResultBean result = new QueryResultBean();
+	public QueryResultResponse findNOverlappingDocuments(int minimumTermsShouldMatch, List<String> terms) throws IOException {
+		QueryResultResponse result = new QueryResultResponse();
 		if (terms.size() < minimumTermsShouldMatch) {
 			log.warn("query will always be empty term.length < minimumTermsShouldMatch");
 			return result;
@@ -158,8 +158,8 @@ public class IndexAPI {
 	 * as was used for the documents at building time of the index 
 	 * @throws IOException 
 	 */
-	public QueryBean preprocess(String query) throws IOException {
-		QueryBean terms = new QueryBean();
+	public QueryTermResponse preprocess(String query) throws IOException {
+		QueryTermResponse terms = new QueryTermResponse();
 		// create stream and add char term attribute
 		TokenStream stream = analyzer.tokenStream(IndexConstants.CONTENT, query);
 		CharTermAttribute cattr = stream.addAttribute(CharTermAttribute.class);

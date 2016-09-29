@@ -13,9 +13,8 @@ import javax.ws.rs.core.MediaType;
 import ch.eth.ir.indexserver.index.IndexAPI;
 import ch.eth.ir.indexserver.server.config.RequestProperties;
 import ch.eth.ir.indexserver.server.exception.BatchLimitExceededException;
-import ch.eth.ir.indexserver.server.resource.beans.DocumentVectorBatch;
-import ch.eth.ir.indexserver.server.resource.beans.FrequencyBatch;
-import ch.eth.ir.indexserver.server.resource.beans.FrequencyBean;
+import ch.eth.ir.indexserver.server.response.FrequencyBatchResponse;
+import ch.eth.ir.indexserver.server.response.FrequencyBean;
 import ch.eth.ir.indexserver.server.security.Secured;
 
 /**
@@ -30,8 +29,8 @@ public class TermResource {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("df")
-	public FrequencyBatch getDocumentFrequency(@QueryParam("term") List<String> terms) throws IOException {
-		FrequencyBatch frequencyBatch = new FrequencyBatch();
+	public FrequencyBatchResponse getDocumentFrequency(@QueryParam("term") List<String> terms) throws IOException {
+		FrequencyBatchResponse frequencyBatch = new FrequencyBatchResponse();
 		if (terms.size() > RequestProperties.MAX_BATCH_REQ_ALLOWED) {
 			throw new BatchLimitExceededException();
 		}
@@ -44,8 +43,8 @@ public class TermResource {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("cf")
-	public FrequencyBatch getCollectionFrequency(@QueryParam("term") List<String> terms) throws IOException {
-		FrequencyBatch frequencyBatch = new FrequencyBatch();
+	public FrequencyBatchResponse getCollectionFrequency(@QueryParam("term") List<String> terms) throws IOException {
+		FrequencyBatchResponse frequencyBatch = new FrequencyBatchResponse();
 		if (terms.size() > RequestProperties.MAX_BATCH_REQ_ALLOWED) {
 			throw new BatchLimitExceededException();
 		}

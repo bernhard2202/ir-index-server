@@ -17,7 +17,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import ch.eth.ir.indexserver.index.IndexAPI;
-import ch.eth.ir.indexserver.server.resource.beans.QueryResultBean;
+import ch.eth.ir.indexserver.server.response.QueryResultResponse;
 import ch.eth.ir.indexserver.server.security.Secured;
 
 /** 
@@ -58,7 +58,7 @@ public class IndexResource {
 	        		minimumOverlap = query.size();
 	        	}
 				try {
-					QueryResultBean result = indexAPI.findNOverlappingDocuments(minimumOverlap, query);
+					QueryResultResponse result = indexAPI.findNOverlappingDocuments(minimumOverlap, query);
 		            asyncResponse.resume(result);
 				} catch (IOException e) {
 					asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
