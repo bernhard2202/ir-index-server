@@ -93,19 +93,24 @@ public class IndexAPI {
 		uniqueTokens = Long.parseLong(props.getProperty("terms.unique"));
 	}
 	
-	/**
-	 * Builds a Lucene query which searches for all documents which contain at least
-	 * minimTermsShouldMatch terms of the given terms.
-	 */
-	private Query buildQuery(List<String> terms, int minimumTermsShouldMatch) {
-		BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
-		queryBuilder.setMinimumNumberShouldMatch(minimumTermsShouldMatch);
-		for (String term : terms) {
-			Term queryTerm = new Term(IndexConstants.CONTENT, term);
-			queryBuilder.add(new TermQuery(queryTerm), Occur.SHOULD);
-		}
-		return queryBuilder.build();
+	
+	public IndexSearcher getSearcher() {
+		return searcher;
 	}
+	
+//	/**
+//	 * Builds a Lucene query which searches for all documents which contain at least
+//	 * minimTermsShouldMatch terms of the given terms.
+//	 */
+//	private Query buildQuery(List<String> terms, int minimumTermsShouldMatch) {
+//		BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
+//		queryBuilder.setMinimumNumberShouldMatch(minimumTermsShouldMatch);
+//		for (String term : terms) {
+//			Term queryTerm = new Term(IndexConstants.CONTENT, term);
+//			queryBuilder.add(new TermQuery(queryTerm), Occur.SHOULD);
+//		}
+//		return queryBuilder.build();
+//	}
 	
 	
 	/**
@@ -124,34 +129,34 @@ public class IndexAPI {
 		}
 		return new DocumentVectorBean(docId, documentVector);
 	}
-	
-	/**
-	 * Returns all document id's of documents containing at least minimumTermsShouldMatch terms
-	 * of the given terms.
-	 */
-	public QueryResultResponse findNOverlappingDocuments(int minimumTermsShouldMatch, List<String> terms) throws IOException {
-		QueryResultResponse result = new QueryResultResponse();
-		if (terms.size() < minimumTermsShouldMatch) {
-			log.warn("query will always be empty term.length < minimumTermsShouldMatch");
-			return result;
-		}
-		// create query and search
-		Query query = buildQuery(terms, minimumTermsShouldMatch);
-		TopDocs luceneResult = searcher.search(query, reader.maxDoc());
-		// no results
-		if (luceneResult.totalHits == 0) {
-			return result;
-		}
-		// extract document id's
-		ArrayList<Integer> docIds = new ArrayList<Integer>(luceneResult.totalHits);
-		for (int i = 0; i < luceneResult.totalHits; i++) {
-			docIds.add(luceneResult.scoreDocs[i].doc);
-		}
-		// shuffle the results to hide the ranking algorithm
-		Collections.shuffle(docIds);
-		result.addAllDocuments(docIds);
-		return result;
-	}
+//	
+//	/**
+//	 * Returns all document id's of documents containing at least minimumTermsShouldMatch terms
+//	 * of the given terms.
+//	 */
+//	public QueryResultResponse findNOverlappingDocuments(int minimumTermsShouldMatch, List<String> terms) throws IOException {
+//		QueryResultResponse result = new QueryResultResponse();
+//		if (terms.size() < minimumTermsShouldMatch) {
+//			log.warn("query will always be empty term.length < minimumTermsShouldMatch");
+//			return result;
+//		}
+//		// create query and search
+//		Query query = buildQuery(terms, minimumTermsShouldMatch);
+//		TopDocs luceneResult = searcher.search(query, reader.maxDoc());
+//		// no results
+//		if (luceneResult.totalHits == 0) {
+//			return result;
+//		}
+//		// extract document id's
+//		ArrayList<Integer> docIds = new ArrayList<Integer>(luceneResult.totalHits);
+//		for (int i = 0; i < luceneResult.totalHits; i++) {
+//			docIds.add(luceneResult.scoreDocs[i].doc);
+//		}
+//		// shuffle the results to hide the ranking algorithm
+//		Collections.shuffle(docIds);
+//		result.addAllDocuments(docIds);
+//		return result;
+//	}
 	
 	/**
 	 * Applies the same preprocessing, word filtering and term splitting to the given query

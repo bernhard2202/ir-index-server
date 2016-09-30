@@ -6,5 +6,10 @@ public class RequestProperties {
 	 * into to a single batch request.
 	 */
 	public final static Integer MAX_BATCH_REQ_ALLOWED = 100;
+	
+	/**
+	 * upper bound on the number of document ID's returned when issuing a query
+	 */
+	public final static int MAX_SEARCH_RESULTS = 100000;
 
 }

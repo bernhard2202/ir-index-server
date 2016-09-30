@@ -12,8 +12,6 @@ import ch.eth.ir.indexserver.server.security.UserProperties;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Optional;
-
 /**
  * Main class for starting server
  */
@@ -24,16 +22,23 @@ public class Main {
 	
 	public static final String BASE_URI;
     public static final String protocol;
-    public static final Optional<String> host;
+    public static final String host;
     public static final String path;
-    public static final Optional<String> port;
+    public static final String port;
    
     static{
         protocol = "http://";
-        host = Optional.ofNullable(System.getenv("HOSTNAME"));
-        port = Optional.ofNullable(System.getenv("PORT"));
+        host = System.getenv("HOSTNAME");
+        port = System.getenv("PORT");
         path = "irserver";
-        BASE_URI = protocol + host.orElse("localhost") + ":" + port.orElse("8080") + "/" + path + "/";
+        StringBuffer uri = new StringBuffer(protocol);
+        uri.append(host==null?"localhost":host);
+        uri.append(":");
+        uri.append(port==null?"8080":port);
+        uri.append("/");
+        uri.append(path);
+        uri.append("/");
+        BASE_URI = uri.toString();
     }
 	
 	/**

@@ -1,8 +1,11 @@
 package ch.eth.ir.indexserver.server.request;
 
+import java.util.concurrent.Callable;
+
 import ch.eth.ir.indexserver.server.response.AbstractResponse;
 
-public abstract class AbstractPriorityRequest implements Comparable<AbstractPriorityRequest>{
+public abstract class AbstractPriorityRequest<T extends AbstractResponse> 
+			implements Comparable<AbstractPriorityRequest<T>>, Callable<T> {
 	private int priority;
 	private AbstractResponse response;
 	
