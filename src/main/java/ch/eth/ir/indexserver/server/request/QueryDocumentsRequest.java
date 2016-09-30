@@ -28,9 +28,8 @@ public class QueryDocumentsRequest extends AbstractPriorityRequest<QueryResultRe
 	private List<String> terms;
 	private int nOverlappingTerms;
 	
-	public QueryDocumentsRequest(int priority, IndexSearcher searcher, 
-			List<String> terms, int nOverlappingTerms) {
-		super(priority);
+	public QueryDocumentsRequest(IndexSearcher searcher, List<String> terms, int nOverlappingTerms) {
+		super();
 		this.searcher = searcher;
 		this.terms = terms;
 		this.nOverlappingTerms = nOverlappingTerms;
@@ -60,6 +59,9 @@ public class QueryDocumentsRequest extends AbstractPriorityRequest<QueryResultRe
 			logger.warn("query will always be empty term.length < minimumTermsShouldMatch");
 			return null;
 		}
+		if (terms.size()==2)
+			Thread.sleep(20000);
+		
 		
 		// create query and search
 		Query query = buildQuery();

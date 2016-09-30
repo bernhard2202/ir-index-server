@@ -18,12 +18,12 @@ import ch.eth.ir.indexserver.server.response.QueryResultResponse;
 public class Main {
 	public static void main(String[] args) {
 		Client client = ClientBuilder.newClient();
-		WebTarget target = client.target("http://idvm-infk-hofmann04.inf.ethz.ch:8080/irserver/");
-//		WebTarget target = client.target("http://localhost:8080/irserver/");
+//		WebTarget target = client.target("http://idvm-infk-hofmann04.inf.ethz.ch:8080/irserver/");
+		WebTarget target = client.target("http://localhost:8080/irserver/");
 		Random rand = new Random();
 		
-		String credentials = "Bearer 1audh2egrg542je98292t92l35";
-//		String credentials = "Bearer svifpfvdl9fqso91t8fgs8432j";
+//		String credentials = "Bearer 1audh2egrg542je98292t92l35";
+		String credentials = "Bearer svifpfvdl9fqso91t8fgs8432j";
 		int requestDocumentNotOk = 0;
 		int requestDocumentOk=0;
 		int requestQueryOk=0;
@@ -41,7 +41,7 @@ public class Main {
 			try {
 				WebTarget requestTarget = target.path("document/vector");
 				for (int j=0; j<99; j++) {
-					requestTarget = requestTarget.queryParam("id", rand.nextInt(1078050)+1);
+					requestTarget = requestTarget.queryParam("id", rand.nextInt(828916)+1);
 				}
 				Invocation.Builder invocationBuilder =
 						requestTarget.request(MediaType.APPLICATION_JSON);

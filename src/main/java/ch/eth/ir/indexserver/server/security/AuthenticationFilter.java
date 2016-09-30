@@ -44,6 +44,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
             throw new UnauthorizedAccessException();
         }
         UserProperties.increaseRequestCount(token);
-        log.info("user request with token: "+token);
+        //TODO: uncomment when every user request should be logged
+        //log.info("user request with token: "+token);
 	}
 }
