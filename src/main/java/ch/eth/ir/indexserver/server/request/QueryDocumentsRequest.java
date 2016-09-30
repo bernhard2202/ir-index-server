@@ -3,7 +3,6 @@ package ch.eth.ir.indexserver.server.request;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -22,7 +21,7 @@ import ch.eth.ir.indexserver.server.response.QueryResultResponse;
 /**
  * Queries documents from the index
  */
-public class QueryDocumentsRequest extends AbstractPriorityRequest<QueryResultResponse> {
+public class QueryDocumentsRequest extends AbstractRequest<QueryResultResponse> {
 	private static Logger logger = Logger.getLogger(QueryDocumentsRequest.class);
 
 	private IndexSearcher searcher;

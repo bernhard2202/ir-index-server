@@ -14,7 +14,7 @@ import ch.eth.ir.indexserver.index.IndexConstants;
 import ch.eth.ir.indexserver.server.response.DocumentVectorBatchResponse;
 import ch.eth.ir.indexserver.server.response.DocumentVectorBean;
 
-public class TermVectorsBatchRequest extends AbstractPriorityRequest<DocumentVectorBatchResponse> {
+public class TermVectorsBatchRequest extends AbstractRequest<DocumentVectorBatchResponse> {
 	//TODOprivate static Logger logger = Logger.getLogger(QueryDocumentsRequest.class);
 
 	private IndexReader reader;

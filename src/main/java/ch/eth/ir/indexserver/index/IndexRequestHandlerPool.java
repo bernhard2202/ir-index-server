@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
-import ch.eth.ir.indexserver.server.request.AbstractPriorityRequest;
+import ch.eth.ir.indexserver.server.request.AbstractRequest;
 import ch.eth.ir.indexserver.server.response.AbstractResponse;
 
 public class IndexRequestHandlerPool extends ThreadPoolExecutor{
@@ -33,7 +33,7 @@ public class IndexRequestHandlerPool extends ThreadPoolExecutor{
 		return INSTANCE;
 	}
 	
-	public<T extends AbstractResponse> Future<T> submit(AbstractPriorityRequest<T> task, int priority) {
+	public<T extends AbstractResponse> Future<T> submit(AbstractRequest<T> task, int priority) {
 		return (Future<T>) super.submit(new ComparableFutureTask<T>(task, priority));
     }
 

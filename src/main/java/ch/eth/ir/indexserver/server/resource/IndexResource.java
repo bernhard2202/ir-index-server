@@ -1,7 +1,6 @@
 package ch.eth.ir.indexserver.server.resource;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -21,6 +20,7 @@ import javax.ws.rs.core.Response;
 
 import ch.eth.ir.indexserver.index.IndexAPI;
 import ch.eth.ir.indexserver.index.IndexRequestHandlerPool;
+import ch.eth.ir.indexserver.server.config.RequestProperties;
 import ch.eth.ir.indexserver.server.request.QueryDocumentsRequest;
 import ch.eth.ir.indexserver.server.response.QueryResultResponse;
 import ch.eth.ir.indexserver.server.security.Secured;
@@ -51,7 +51,7 @@ public class IndexResource {
 		Future<QueryResultResponse> futureResponse = IndexRequestHandlerPool.getInstance()
 				.submit(new QueryDocumentsRequest(indexAPI.getSearcher(), query, nOverlap),1);
 		try {
-			QueryResultResponse response = futureResponse.get(20, TimeUnit.SECONDS);
+			QueryResultResponse response = futureResponse.get(RequestProperties.TIMEOUT, TimeUnit.SECONDS);
 			asyncResponse.resume(response);
 	    } catch (InterruptedException | ExecutionException e) {
 	    	asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)

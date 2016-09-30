@@ -4,6 +4,6 @@ import java.util.concurrent.Callable;
 
 import ch.eth.ir.indexserver.server.response.AbstractResponse;
 
-public abstract class AbstractPriorityRequest<T extends AbstractResponse> implements Callable<T> {
+public abstract class AbstractRequest<T extends AbstractResponse> implements Callable<T> {
 	
 }

@@ -111,26 +111,6 @@ public class IndexAPI {
 		return terms;
 	}
 	
-	/** 
-	 * Returns the document frequency for a given term
-	 * @param term
-	 * @return Document frequency of the term
-	 */
-	public int getDocumentFrequency(String term) throws IOException {
-		Term luceneTerm = new Term(IndexConstants.CONTENT, new BytesRef(term));
-		return reader.docFreq(luceneTerm);
-	}
-	
-	/** 
-	 * Returns the collection frequency for a given term
-	 * @param term
-	 * @return Collection frequency of the term
-	 */
-	public long getCollectionFrequency(String term) throws IOException {
-		Term luceneTerm = new Term(IndexConstants.CONTENT, new BytesRef(term));
-		return reader.totalTermFreq(luceneTerm);
-	}
-	
 	/**
 	 * Returns the number of documents in the collection
 	 * @return
