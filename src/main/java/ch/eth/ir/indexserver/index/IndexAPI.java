@@ -84,28 +84,13 @@ public class IndexAPI {
 		uniqueTokens = Long.parseLong(props.getProperty("terms.unique"));
 	}
 	
-	
 	public IndexSearcher getSearcher() {
 		return searcher;
 	}
 	
-	
-	/**
-	 * Retrieves a document vector for a given documentID
-	 */
-	public DocumentVectorBean getDocumentVector(int docId) throws IOException {
-		Map<String, Long> documentVector = new HashMap<String, Long>();
-		Terms docTerms = reader.getTermVector(docId, IndexConstants.CONTENT);
-		if (docTerms == null || docTerms.size() == 0) {
-			return new DocumentVectorBean(docId, documentVector);
-		}
-		TermsEnum termEnumerator = docTerms.iterator();
-		BytesRef text = null;
-		while ((text = termEnumerator.next()) != null) {
-			documentVector.put(text.utf8ToString(), termEnumerator.totalTermFreq());
-		}
-		return new DocumentVectorBean(docId, documentVector);
-	}
+	public IndexReader getReader() {
+		return reader;
+	}	
 
 	/**
 	 * Applies the same preprocessing, word filtering and term splitting to the given query

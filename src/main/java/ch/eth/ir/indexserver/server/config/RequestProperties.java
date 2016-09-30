@@ -10,6 +10,11 @@ public class RequestProperties {
 	/**
 	 * upper bound on the number of document ID's returned when issuing a query
 	 */
-	public final static int MAX_SEARCH_RESULTS = 100000;
+	public final static int MAX_SEARCH_RESULTS = 10000;
+	
+	/**
+	 * number of seconds until any request on the queue times out. 
+	 */
+	public final static int TIMEOUT = 20;
 
 }

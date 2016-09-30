@@ -2,6 +2,7 @@ package ch.eth.ir.indexserver.server.resource;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -39,7 +40,13 @@ public class IndexResource {
 	@Path("query")
 	public void findIdsForQuery(@Suspended final AsyncResponse asyncResponse,
 			@DefaultValue("0") @QueryParam("minOverlap") final int nOverlap,
-			@QueryParam("term") final List<String> query) throws IOException {
+			@QueryParam("term") final Set<String> query) throws IOException {
+				
+		/* check for ill formed queries */
+		if (query.size() < nOverlap) {
+			asyncResponse.resume(Response.status(Response.Status.BAD_REQUEST)
+					.entity("minOverlap is bigger than the number of terms provided").build());
+		} 		
 		
 		Future<QueryResultResponse> futureResponse = IndexRequestHandlerPool.getInstance()
 				.submit(new QueryDocumentsRequest(indexAPI.getSearcher(), query, nOverlap),1);

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.apache.lucene.index.Term;
@@ -25,14 +26,14 @@ public class QueryDocumentsRequest extends AbstractPriorityRequest<QueryResultRe
 	private static Logger logger = Logger.getLogger(QueryDocumentsRequest.class);
 
 	private IndexSearcher searcher;
-	private List<String> terms;
+	private Set<String> terms;
 	private int nOverlappingTerms;
 	
-	public QueryDocumentsRequest(IndexSearcher searcher, List<String> terms, int nOverlappingTerms) {
+	public QueryDocumentsRequest(IndexSearcher searcher, Set<String> terms, int nOverlappingTerms) {
 		super();
 		this.searcher = searcher;
 		this.terms = terms;
-		this.nOverlappingTerms = nOverlappingTerms;
+		this.nOverlappingTerms = nOverlappingTerms==0 ? terms.size() : nOverlappingTerms;
 	}
 
 	/**
@@ -55,13 +56,9 @@ public class QueryDocumentsRequest extends AbstractPriorityRequest<QueryResultRe
 	 */
 	public QueryResultResponse call() throws Exception {
 		QueryResultResponse result = new QueryResultResponse();
-		if (terms.size() < nOverlappingTerms) {
-			logger.warn("query will always be empty term.length < minimumTermsShouldMatch");
-			return null;
-		}
+		
 		if (terms.size()==2)
 			Thread.sleep(20000);
-		
 		
 		// create query and search
 		Query query = buildQuery();
@@ -72,6 +69,7 @@ public class QueryDocumentsRequest extends AbstractPriorityRequest<QueryResultRe
 			logger.error("error on searching the index", e);
 			return null;
 		}
+		
 		// no results
 		if (luceneResult == null || luceneResult.totalHits == 0) {
 			return result;
@@ -79,7 +77,8 @@ public class QueryDocumentsRequest extends AbstractPriorityRequest<QueryResultRe
 		
 		// extract document id's
 		ArrayList<Integer> docIds = new ArrayList<Integer>(luceneResult.totalHits);
-		for (int i = 0; i < luceneResult.totalHits; i++) {
+		int max = Math.min(RequestProperties.MAX_SEARCH_RESULTS, luceneResult.totalHits);
+		for (int i = 0; i < max; i++) {
 			docIds.add(luceneResult.scoreDocs[i].doc);
 		}
 		
