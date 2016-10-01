@@ -26,7 +26,7 @@ import ch.eth.ir.indexserver.server.security.Secured;
  */
 @Secured
 @Path("document")
-public class DocumentResource extends AbstractResource {
+public class DocumentResource extends AbstractAsynchronousResource {
 
 	@Inject
 	private IndexAPI indexAPI;

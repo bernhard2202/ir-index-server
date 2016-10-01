@@ -1,4 +1,4 @@
-package ch.eth.ir.indexserver.index;
+package ch.eth.ir.indexserver.server.threadpool;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
@@ -9,25 +9,21 @@ import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.log4j.Logger;
-
 import ch.eth.ir.indexserver.server.request.AbstractRequest;
 import ch.eth.ir.indexserver.server.response.AbstractResponse;
 
-public class IndexRequestHandlerPool extends ThreadPoolExecutor{
+public class RequestHandlerPool extends ThreadPoolExecutor{
 	
-	private IndexRequestHandlerPool(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit,
+	private RequestHandlerPool(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit,
 			BlockingQueue<Runnable> workQueue) {
 		super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
 	}
-	//TODO constantly log executor status
-	private static Logger logger = Logger.getLogger(IndexRequestHandlerPool.class);
-
-	private static IndexRequestHandlerPool INSTANCE = null;
 	
-	public static IndexRequestHandlerPool getInstance() {
+	private static RequestHandlerPool INSTANCE = null;
+	
+	public static RequestHandlerPool getInstance() {
 		if (INSTANCE == null) {
-			INSTANCE = new IndexRequestHandlerPool(5, 10, 60, TimeUnit.SECONDS,
+			INSTANCE = new RequestHandlerPool(5, 10, 60, TimeUnit.SECONDS,
 					new PriorityBlockingQueue<Runnable>(20));
 		}
 		return INSTANCE;
@@ -69,9 +65,6 @@ public class IndexRequestHandlerPool extends ThreadPoolExecutor{
 	    @Override
 	    public boolean cancel(boolean mayInterruptIfRunning) {
 	    	return super.cancel(mayInterruptIfRunning);
-	    	//TODO log
 	    }
-	    
-	    // log other stuff here
 	}
 }

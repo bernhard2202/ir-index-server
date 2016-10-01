@@ -2,10 +2,6 @@ package ch.eth.ir.indexserver.server.resource;
 
 import java.io.IOException;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -16,17 +12,13 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
 import ch.eth.ir.indexserver.index.IndexAPI;
-import ch.eth.ir.indexserver.index.IndexRequestHandlerPool;
 import ch.eth.ir.indexserver.server.config.RequestProperties;
 import ch.eth.ir.indexserver.server.exception.BatchLimitExceededException;
 import ch.eth.ir.indexserver.server.request.CollectionFrequencyBatchRequest;
 import ch.eth.ir.indexserver.server.request.DocumentFrequencyBatchRequest;
-import ch.eth.ir.indexserver.server.request.TermVectorsBatchRequest;
-import ch.eth.ir.indexserver.server.response.FrequencyBatchResponse;
 import ch.eth.ir.indexserver.server.security.Secured;
 
 /**
@@ -34,7 +26,7 @@ import ch.eth.ir.indexserver.server.security.Secured;
  */
 @Secured
 @Path("term")
-public class TermResource extends AbstractResource {
+public class TermResource extends AbstractAsynchronousResource {
 	@Inject
 	private IndexAPI indexAPI;
 	

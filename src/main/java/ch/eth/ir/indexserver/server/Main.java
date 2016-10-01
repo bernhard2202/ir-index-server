@@ -6,9 +6,10 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import ch.eth.ir.indexserver.index.IndexAPI;
-import ch.eth.ir.indexserver.index.IndexRequestHandlerPool;
 import ch.eth.ir.indexserver.server.config.ApplicationResourceConfig;
 import ch.eth.ir.indexserver.server.security.UserProperties;
+import ch.eth.ir.indexserver.server.threadpool.RequestHandlerPool;
+import ch.eth.ir.indexserver.server.threadpool.ThreadPoolMonitor;
 
 import java.io.File;
 import java.io.IOException;
@@ -79,11 +80,17 @@ public class Main {
 		
 		UserProperties.load(args[0], args[1]); 
 		final HttpServer server = startServer();
+		
+		 ThreadPoolMonitor monitor = new ThreadPoolMonitor(RequestHandlerPool.getInstance(), 3);
+	     Thread monitorThread = new Thread(monitor);
+	     monitorThread.start();
 
 		log.info(String.format("Jersey app started with WADL available at %s\nHit enter to stop it...", BASE_URI));
 		System.in.read();
 
-		IndexRequestHandlerPool.getInstance().shutdownNow();
+		RequestHandlerPool.getInstance().shutdownNow();
+		monitor.shutdown();
 		server.shutdownNow();
+		
 	}
 }

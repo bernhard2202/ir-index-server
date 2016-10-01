@@ -12,8 +12,6 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import com.fasterxml.jackson.core.JsonParseException;
-
 import ch.eth.ir.indexserver.server.response.DocumentVectorBatchResponse;
 import ch.eth.ir.indexserver.server.response.QueryResultResponse;
 
@@ -89,7 +87,7 @@ public class Main {
 						try {
 							QueryResultResponse queryResult = response.readEntity(QueryResultResponse.class);
 						} catch (Exception e) {
-							System.out.println("aaa");
+							e.printStackTrace(System.err);
 						}
 						if (response.getStatus()!=200) {
 							requestQueryNotOk++;
