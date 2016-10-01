@@ -10,8 +10,6 @@ import org.apache.log4j.Logger;
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.jasypt.properties.EncryptableProperties;
 
-import ch.eth.ir.indexserver.index.IndexAPI;
-
 /**
  * Static class to load and decrypt user properties in memory during 
  * runtime.
@@ -19,9 +17,10 @@ import ch.eth.ir.indexserver.index.IndexAPI;
 public class UserProperties {
 	
 	private static StandardPBEStringEncryptor encryptor = null;
-	// maps decrypted token to user name in memory
+	// maps user tokens to user names 
 	private static HashMap<String, String> credentials = null;
 	// keeps track of usage statistics
+	// mapping user names to the number of requests performed by them
 	private static ConcurrentHashMap<String, Integer> requestCount = null;
 	
 	private static Logger log = Logger.getLogger(UserProperties.class);
@@ -46,7 +45,7 @@ public class UserProperties {
 			if (user != null && token != null) {
 				log.info("loaded user config for: " + user);
 				credentials.put(token, user);
-				requestCount.put(token, 0);
+				requestCount.put(user, 0);
 			}
 			i++;
 		}
@@ -65,8 +64,27 @@ public class UserProperties {
 		return credentials.containsKey(token);
 	}
 	
-	public static void increaseRequestCount(String userToken) {
-		if (requestCount.containsKey(userToken))
-			requestCount.put(userToken, requestCount.get(userToken)+1);
+	/**
+	 * Increase the request count for the given user by one
+	 */
+	public static void increaseRequestCount(String userName) {
+		if (requestCount.containsKey(userName))
+			//synchronized (requestCount) {
+			requestCount.put(userName, requestCount.get(userName)+1);
+			//}
+	}
+
+	/**
+	 * Return the username for a given token 
+	 */
+	public static String getNameForToken(String token) {
+		return credentials.get(token);
+	}
+
+	public static int getRequestsForUser(String name) {
+		if (requestCount.containsKey(name)) {
+			return requestCount.get(name);
+		}
+		return 0;
 	}
 }

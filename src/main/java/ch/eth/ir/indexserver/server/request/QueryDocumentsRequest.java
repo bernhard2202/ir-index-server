@@ -1,6 +1,5 @@
 package ch.eth.ir.indexserver.server.request;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Set;
@@ -22,8 +21,6 @@ import ch.eth.ir.indexserver.server.response.QueryResultResponse;
  * Queries documents from the index
  */
 public class QueryDocumentsRequest extends AbstractRequest<QueryResultResponse> {
-	private static Logger logger = Logger.getLogger(QueryDocumentsRequest.class);
-
 	private IndexSearcher searcher;
 	private Set<String> terms;
 	private int nOverlappingTerms;
@@ -62,17 +59,7 @@ public class QueryDocumentsRequest extends AbstractRequest<QueryResultResponse> 
 		// create query and search
 		Query query = buildQuery();
 		TopDocs luceneResult = null;
-		try {
-			luceneResult = searcher.search(query, RequestProperties.MAX_SEARCH_RESULTS);
-		} catch (IOException e) {
-			logger.error("error on searching the index", e);
-			return null;
-		}
-		
-		// no results
-		if (luceneResult == null || luceneResult.totalHits == 0) {
-			return result;
-		}
+		luceneResult = searcher.search(query, RequestProperties.MAX_SEARCH_RESULTS);
 		
 		// extract document id's
 		ArrayList<Integer> docIds = new ArrayList<Integer>(luceneResult.totalHits);

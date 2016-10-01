@@ -16,5 +16,17 @@ public class RequestProperties {
 	 * number of seconds until any request on the queue times out. 
 	 */
 	public final static int TIMEOUT = 20;
+	
+	/**
+	 * Error message shown on a timeout
+	 */
+	public final static String TIMEOUT_ERROR_MSG = 
+			"The request timed out, this could be due to too low priority, please try again later.";
+	
+	/**
+	 * Error message shown on a internal error during computation
+	 */
+	public final static String INTERNAL_ERROR_MSG = 
+			"Internal Error, please check request and repeat. Please report this error, if it keeps repeating.";
 
 }

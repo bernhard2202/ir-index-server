@@ -2,10 +2,6 @@ package ch.eth.ir.indexserver.server.resource;
 
 import java.io.IOException;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.inject.Inject;
 import javax.ws.rs.DefaultValue;
@@ -15,14 +11,13 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
 import ch.eth.ir.indexserver.index.IndexAPI;
-import ch.eth.ir.indexserver.index.IndexRequestHandlerPool;
-import ch.eth.ir.indexserver.server.config.RequestProperties;
 import ch.eth.ir.indexserver.server.request.QueryDocumentsRequest;
-import ch.eth.ir.indexserver.server.response.QueryResultResponse;
 import ch.eth.ir.indexserver.server.security.Secured;
 
 /** 
@@ -30,7 +25,7 @@ import ch.eth.ir.indexserver.server.security.Secured;
  */
 @Secured
 @Path("index")
-public class IndexResource {
+public class IndexResource extends AbstractResource {
 	
 	@Inject
 	private IndexAPI indexAPI;
@@ -38,9 +33,10 @@ public class IndexResource {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("query")
-	public void findIdsForQuery(@Suspended final AsyncResponse asyncResponse,
+	public void findDocIdsForQuery(@Suspended final AsyncResponse asyncResponse,
 			@DefaultValue("0") @QueryParam("minOverlap") final int nOverlap,
-			@QueryParam("term") final Set<String> query) throws IOException {
+			@QueryParam("term") final Set<String> query,
+			@Context SecurityContext securityContext) throws IOException {
 				
 		/* check for ill formed queries */
 		if (query.size() < nOverlap) {
@@ -48,18 +44,9 @@ public class IndexResource {
 					.entity("minOverlap is bigger than the number of terms provided").build());
 		} 		
 		
-		Future<QueryResultResponse> futureResponse = IndexRequestHandlerPool.getInstance()
-				.submit(new QueryDocumentsRequest(indexAPI.getSearcher(), query, nOverlap),1);
-		try {
-			QueryResultResponse response = futureResponse.get(RequestProperties.TIMEOUT, TimeUnit.SECONDS);
-			asyncResponse.resume(response);
-	    } catch (InterruptedException | ExecutionException e) {
-	    	asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-	    			.entity("Internal error, please repeat").build());
-	    } catch (TimeoutException e) {
-	    	futureResponse.cancel(true);
-	    	asyncResponse.resume(Response.status(Response.Status.SERVICE_UNAVAILABLE)
-	    			.entity("Operation time out.").build());
-	    }
+		this.performAsyncRequest(
+				asyncResponse,
+				new QueryDocumentsRequest(indexAPI.getSearcher(), query, nOverlap),
+				securityContext);
 	}
 }
