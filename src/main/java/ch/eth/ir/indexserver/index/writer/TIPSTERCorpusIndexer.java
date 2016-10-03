@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
@@ -82,7 +83,7 @@ public class TIPSTERCorpusIndexer {
 
 	/* index the entry of a zip file */
 	private void indexZipEntry(ZipFile zipFile, ZipEntry zipEntry) throws IOException, DocumentException {
-		log.debug("Indexing file: " + zipEntry.getName());
+//		log.debug("Indexing file: " + zipEntry.getName());
 		
 		// extract the file content
 		InputStream contentStream = zipFile.getInputStream(zipEntry);
@@ -90,15 +91,20 @@ public class TIPSTERCorpusIndexer {
         org.dom4j.Document XMLDocument = reader.read(contentStream);
         
         if (XMLDocument==null) {
+        	System.out.println(zipEntry.getName());
         	return;
         }
 
-        Node titleNode = XMLDocument.selectSingleNode( "/DOC/DOCNO");
-		Node contentNode = XMLDocument.selectSingleNode("/DOC/TEXT");
-		
+        Node titleNode = XMLDocument.selectSingleNode( "/DOC/DOCNO");	
 		String title = titleNode==null ? "" : titleNode.getText();
-		String content = contentNode==null ? "" : contentNode.getText();
-
+        
+		List<Node> contentNodes = XMLDocument.selectNodes("/DOC/TEXT");
+		StringBuffer contentB = new StringBuffer();
+		for (Node node : contentNodes) {
+			contentB.append(node.getText());
+		}
+		String content = contentB.toString();
+		
 		IOUtils.closeQuietly(contentStream);
 		
 		// index file contents
@@ -165,7 +171,7 @@ public class TIPSTERCorpusIndexer {
 	 * since they are comp. intense to extract and they wont change unless the
 	 * index gets rebuild we safe a lot of comp. time by doing this 
 	 */
-	private void writeIndexStatistics() throws IOException {
+	private void writeIndexStatistics(int maxDocId) throws IOException {
 		Directory indexDirectory = FSDirectory.open(INDEX_DIR.toPath());
 		IndexReader indexReader = DirectoryReader.open(indexDirectory);
 		
@@ -190,6 +196,7 @@ public class TIPSTERCorpusIndexer {
 		props.setProperty("terms.total", String.valueOf(total));
 		props.setProperty("terms.unique", String.valueOf(unique));
 		props.setProperty("document.average.length", String.valueOf(avgDl));
+		props.setProperty("document.max.id", String.valueOf(maxDocId));
 		
 		props.store(stream, "IndexProperties - do not change manually!");
 		
@@ -237,9 +244,11 @@ public class TIPSTERCorpusIndexer {
 		}
 	    long endTime = System.currentTimeMillis();
 	    log.info(indexer.writer.numDocs()+" files indexed; time taken: "+(endTime-startTime)+" ms");		
-		indexer.close();
 		
+		int maxDocId = indexer.writer.numDocs();
+		indexer.close();
+
 		log.info("write constant index statistics to properties file...");
-		indexer.writeIndexStatistics();
+		indexer.writeIndexStatistics(maxDocId);
 	}
 }

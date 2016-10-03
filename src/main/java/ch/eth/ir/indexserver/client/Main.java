@@ -1,9 +1,11 @@
 package ch.eth.ir.indexserver.client;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -69,12 +71,15 @@ public class Main {
 						terms.addAll(termVector.keySet());
 						
 						requestTarget = target.path("index/query");
-						
+						Set<String> queryTerms = new HashSet<String>();
 						for (int j=0; j<4; j++) {
 							int index = rand.nextInt(termVector.size());
-							requestTarget = requestTarget.queryParam("term", terms.get(index));
+							queryTerms.add(terms.get(index));
 						}
-						requestTarget = requestTarget.queryParam("minOverlap", 3);
+						
+						for (String s : queryTerms)
+							requestTarget = requestTarget.queryParam("term",s);
+						requestTarget = requestTarget.queryParam("minOverlap", Math.min(queryTerms.size(), 3));
 						
 						invocationBuilder = requestTarget.request(MediaType.APPLICATION_JSON);
 						invocationBuilder.header("Authorization", credentials);
@@ -85,6 +90,7 @@ public class Main {
 						responseTimeQuery += (System.currentTimeMillis()-startR);
 						
 						try {
+							@SuppressWarnings("unused")
 							QueryResultResponse queryResult = response.readEntity(QueryResultResponse.class);
 						} catch (Exception e) {
 							e.printStackTrace(System.err);

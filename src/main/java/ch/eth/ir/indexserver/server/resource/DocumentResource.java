@@ -39,7 +39,7 @@ public class DocumentResource extends AbstractAsynchronousResource {
 			@QueryParam("id") List<Integer> ids,
 			@Context SecurityContext securityContext) throws IOException {
 		
-		int maxDocId = indexAPI.getNumberOfDocuments();
+		int maxDocId = indexAPI.getMaxDocId();
 		
 		/* check for ill formed requests */
 		if (ids.size() > RequestProperties.MAX_BATCH_REQ_ALLOWED) {
@@ -67,6 +67,6 @@ public class DocumentResource extends AbstractAsynchronousResource {
 	@GET
 	@Path("count")
 	public int getDocumentCount() throws IOException {
-		return indexAPI.getNumberOfDocuments();
+		return indexAPI.getMaxDocId();
 	}
 }

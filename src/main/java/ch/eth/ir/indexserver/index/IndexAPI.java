@@ -3,8 +3,6 @@ package ch.eth.ir.indexserver.index;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
 import javax.inject.Singleton;
@@ -16,15 +14,10 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.Terms;
-import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.util.BytesRef;
 
-import ch.eth.ir.indexserver.server.response.DocumentVectorBean;
 import ch.eth.ir.indexserver.server.response.QueryTermResponse;
 
 
@@ -52,7 +45,7 @@ public class IndexAPI {
 	private int averageDocumentLenght = -1;
 	private long totalTokens = -1;
 	private long uniqueTokens = -1;
-	private int documentCount = -1;
+	private int maxDocId = -1;
 	
 	
 	public IndexAPI() throws IOException {
@@ -72,9 +65,7 @@ public class IndexAPI {
 		}
 		searcher = new IndexSearcher(reader);		
 		analyzer = new StandardAnalyzer();
-		
-		documentCount = reader.getDocCount(IndexConstants.CONTENT);
-		
+				
 		Properties props = new Properties();
 		FileInputStream stream = new FileInputStream("./index/index.properties");
 		props.load(stream);
@@ -82,6 +73,7 @@ public class IndexAPI {
 		averageDocumentLenght = Integer.parseInt(props.getProperty("document.average.length"));
 		totalTokens = Long.parseLong(props.getProperty("terms.total"));
 		uniqueTokens = Long.parseLong(props.getProperty("terms.unique"));
+		maxDocId = Integer.parseInt(props.getProperty("document.max.id"));
 	}
 	
 	public IndexSearcher getSearcher() {
@@ -112,12 +104,11 @@ public class IndexAPI {
 	}
 	
 	/**
-	 * Returns the number of documents in the collection
-	 * @return
-	 * @throws IOException
+	 * Returns the maximum document id in the index, documents are indext from 
+	 * id 0 to maxDocId
 	 */
-	public int getNumberOfDocuments() throws IOException {
-		return documentCount;
+	public int getMaxDocId() throws IOException {
+		return maxDocId;
 	}
 	
 	public long getTotalNumberOfTerms() throws IOException {

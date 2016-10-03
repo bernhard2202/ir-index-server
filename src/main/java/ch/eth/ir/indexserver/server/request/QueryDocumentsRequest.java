@@ -52,9 +52,6 @@ public class QueryDocumentsRequest extends AbstractRequest<QueryResultResponse> 
 	public QueryResultResponse call() throws Exception {
 		QueryResultResponse result = new QueryResultResponse();
 		
-		if (terms.size()==2)
-			Thread.sleep(20000);
-		
 		// create query and search
 		Query query = buildQuery();
 		TopDocs luceneResult = null;
