@@ -47,7 +47,7 @@ public class DocumentResource extends AbstractAsynchronousResource {
 		}
 		/* check for wrong doc-ids in the request */
 		for (int id : ids) {
-			if (id < 0 || id > maxDocId) {
+			if (id < 0 || id >= maxDocId) {
 				throw new IllegalDocumentIdentifierException();
 			}
 		}

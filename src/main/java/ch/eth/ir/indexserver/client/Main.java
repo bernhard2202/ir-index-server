@@ -19,13 +19,16 @@ import ch.eth.ir.indexserver.server.response.QueryResultResponse;
 
 public class Main {
 	public static void main(String[] args) {
+		if (args.length != 2 || args[0].length()>100 || args[1].length()>100) {
+			System.out.println("usage client <url> <token>");
+			System.exit(-1);
+		}
 		Client client = ClientBuilder.newClient();
 //		WebTarget target = client.target("http://idvm-infk-hofmann04.inf.ethz.ch:8080/irserver/");
-		WebTarget target = client.target("http://localhost:8080/irserver/");
+		WebTarget target = client.target(args[0]);
 		Random rand = new Random();
 		
-//		String credentials = "Bearer 1audh2egrg542je98292t92l35";
-		String credentials = "Bearer svifpfvdl9fqso91t8fgs8432j";
+		String credentials = "Bearer "+args[1];
 		int requestDocumentNotOk = 0;
 		int requestDocumentOk=0;
 		int requestQueryOk=0;
@@ -37,7 +40,7 @@ public class Main {
 		long responseTimeQuery=0;
 		long responseTimeDoc=0;
 
-		int maxRequest = 1000;
+		int maxRequest = 100000;
 		
 		for (; i < maxRequest+1; i++) {
 			try {
@@ -53,6 +56,7 @@ public class Main {
 				
 				Response response = invocationBuilder.get();
 				
+				
 				responseTimeDoc += (System.currentTimeMillis()-startR);
 				
 				if (response.getStatus()!=200) {
@@ -60,11 +64,19 @@ public class Main {
 				} else {
 					requestDocumentOk++;
 				}
-								
-				DocumentVectorBatchResponse batch = response.readEntity(DocumentVectorBatchResponse.class);
+				DocumentVectorBatchResponse batch = null;
+				try {
+					batch = response.readEntity(DocumentVectorBatchResponse.class);
+				} catch (Exception e) {
+					e.printStackTrace(System.err);
+					
+					System.err.println(response.readEntity(String.class));
+					requestFailedWithException++;
+					continue;
+				}
 				response.close();
 				
-				if (batch.getDocumentVectors().size() > 0) {
+				if (batch != null && batch.getDocumentVectors().size() > 0) {
 					if (batch.getDocumentVectors().get(0).getTermFrequencies().size() > 3) {
 						Map<String, Long> termVector = batch.getDocumentVectors().get(0).getTermFrequencies();
 						List<String> terms = new ArrayList<String>();
@@ -94,6 +106,9 @@ public class Main {
 							QueryResultResponse queryResult = response.readEntity(QueryResultResponse.class);
 						} catch (Exception e) {
 							e.printStackTrace(System.err);
+
+							System.err.println(response.readEntity(String.class));
+							requestFailedWithException++;
 						}
 						if (response.getStatus()!=200) {
 							requestQueryNotOk++;
@@ -107,6 +122,7 @@ public class Main {
 
 				if(i%100==0) {
 					System.out.println(i+"/"+maxRequest);
+					System.out.println((responseTimeDoc/(requestDocumentOk+requestDocumentNotOk+1)));
 				}
 				System.out.print(".");
 			} catch (Exception e) {

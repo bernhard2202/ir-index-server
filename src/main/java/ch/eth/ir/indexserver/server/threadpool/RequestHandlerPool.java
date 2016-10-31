@@ -23,7 +23,7 @@ public class RequestHandlerPool extends ThreadPoolExecutor{
 	
 	public static RequestHandlerPool getInstance() {
 		if (INSTANCE == null) {
-			INSTANCE = new RequestHandlerPool(5, 10, 60, TimeUnit.SECONDS,
+			INSTANCE = new RequestHandlerPool(1, 1, 60, TimeUnit.SECONDS,
 					new PriorityBlockingQueue<Runnable>(20));
 		}
 		return INSTANCE;
