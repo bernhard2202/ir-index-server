@@ -1,6 +1,6 @@
 package ch.eth.ir.indexserver.server.config;
 
-public class RequestProperties {
+public class ServerProperties {
 	/**
 	 * How many single homogeneous requests are allowed to be bundled
 	 * into to a single batch request.
@@ -11,6 +11,22 @@ public class RequestProperties {
 	 * upper bound on the number of document ID's returned when issuing a query
 	 */
 	public final static int MAX_SEARCH_RESULTS = 10000;
+	
+	/**
+	 * Core thread pool size
+	 */
+	public final static int CORE_POOL_SIZE = 5;
+	
+	/**
+	 * Maximum thread pool size
+	 */
+	public final static int MAX_POOL_SIZE = 9;
+	
+	/**
+	 * Thread keep alive time, if a thread is idle, after how many SECONDS
+	 * should it be removed from the pool
+	 */
+	public final static int THREAD_KEEP_ALLIVE_TIME = 60;
 	
 	/**
 	 * number of seconds until any request on the queue times out. 

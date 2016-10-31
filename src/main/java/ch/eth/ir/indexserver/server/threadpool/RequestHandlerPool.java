@@ -9,7 +9,8 @@ import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import ch.eth.ir.indexserver.server.request.AbstractRequest;
+import ch.eth.ir.indexserver.server.config.ServerProperties;
+import ch.eth.ir.indexserver.server.request.AbstractAsynchronousRequest;
 import ch.eth.ir.indexserver.server.response.AbstractResponse;
 
 public class RequestHandlerPool extends ThreadPoolExecutor{
@@ -23,13 +24,18 @@ public class RequestHandlerPool extends ThreadPoolExecutor{
 	
 	public static RequestHandlerPool getInstance() {
 		if (INSTANCE == null) {
-			INSTANCE = new RequestHandlerPool(1, 1, 60, TimeUnit.SECONDS,
+			INSTANCE = new RequestHandlerPool(ServerProperties.CORE_POOL_SIZE,
+					ServerProperties.MAX_POOL_SIZE,
+					ServerProperties.THREAD_KEEP_ALLIVE_TIME,
+					TimeUnit.SECONDS,
 					new PriorityBlockingQueue<Runnable>(20));
 		}
 		return INSTANCE;
 	}
 	
-	public<T extends AbstractResponse> Future<T> submit(AbstractRequest<T> task, int priority) {
+	// code below is to enable priority!
+	
+	public<T extends AbstractResponse> Future<T> submit(AbstractAsynchronousRequest<T> task, int priority) {
 		return (Future<T>) super.submit(new ComparableFutureTask<T>(task, priority));
     }
 

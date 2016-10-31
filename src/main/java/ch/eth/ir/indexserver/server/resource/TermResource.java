@@ -15,7 +15,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 
 import ch.eth.ir.indexserver.index.IndexAPI;
-import ch.eth.ir.indexserver.server.config.RequestProperties;
+import ch.eth.ir.indexserver.server.config.ServerProperties;
 import ch.eth.ir.indexserver.server.exception.BatchLimitExceededException;
 import ch.eth.ir.indexserver.server.request.CollectionFrequencyBatchRequest;
 import ch.eth.ir.indexserver.server.request.DocumentFrequencyBatchRequest;
@@ -39,7 +39,7 @@ public class TermResource extends AbstractAsynchronousResource {
 			@Context SecurityContext securityContext) throws IOException {
 		
 		/* check for ill formed request */
-		if (terms.size() > RequestProperties.MAX_BATCH_REQ_ALLOWED) {
+		if (terms.size() > ServerProperties.MAX_BATCH_REQ_ALLOWED) {
 			throw new BatchLimitExceededException();
 		}
 		
@@ -58,7 +58,7 @@ public class TermResource extends AbstractAsynchronousResource {
 			@Context SecurityContext securityContext) throws IOException {
 		
 		/* check for ill formed request */
-		if (terms.size() > RequestProperties.MAX_BATCH_REQ_ALLOWED) {
+		if (terms.size() > ServerProperties.MAX_BATCH_REQ_ALLOWED) {
 			throw new BatchLimitExceededException();
 		}
 		

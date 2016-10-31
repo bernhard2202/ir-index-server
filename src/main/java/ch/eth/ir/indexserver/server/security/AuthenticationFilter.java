@@ -80,7 +80,8 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 	        }
 		});
         
-        //TODO: uncomment when every user request should be logged
+        // HINT
+        // uncomment when every user request should be logged in the system
         //log.info("user request with token: "+username);
 	}
 }

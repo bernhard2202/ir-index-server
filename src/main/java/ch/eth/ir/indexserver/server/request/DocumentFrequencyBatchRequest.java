@@ -11,7 +11,10 @@ import ch.eth.ir.indexserver.index.IndexConstants;
 import ch.eth.ir.indexserver.server.response.FrequencyBatchResponse;
 import ch.eth.ir.indexserver.server.response.FrequencyBean;
 
-public class DocumentFrequencyBatchRequest extends AbstractRequest<FrequencyBatchResponse>{
+/**
+ * Returns the document frequency for a list (batch) of terms 
+ */
+public class DocumentFrequencyBatchRequest extends AbstractAsynchronousRequest<FrequencyBatchResponse>{
 
 	private Set<String> terms;
 	private IndexReader reader;
@@ -32,6 +35,9 @@ public class DocumentFrequencyBatchRequest extends AbstractRequest<FrequencyBatc
 		return reader.docFreq(luceneTerm);
 	}
 	
+	/**
+	 * Performing request:
+	 */
 	@Override
 	public FrequencyBatchResponse call() throws Exception {
 		FrequencyBatchResponse frequencyBatch = new FrequencyBatchResponse();

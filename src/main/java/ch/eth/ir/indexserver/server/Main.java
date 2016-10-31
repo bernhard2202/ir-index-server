@@ -15,7 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 /**
- * Main class for starting server
+ * Main class for starting  the server
  */
 public class Main {
 
@@ -28,7 +28,11 @@ public class Main {
     public static final String path;
     public static final String port;
    
-    static{
+    
+    /*
+     * CONFIGURE SERVER HOSTNAME, PORT, ETC HERE:
+     */
+    static {
         protocol = "http://";
         host = System.getenv("HOSTNAME");
         port = System.getenv("PORT");
@@ -61,6 +65,7 @@ public class Main {
 	}
 
 	public static void main(String[] args) throws IOException {
+		/* load properties and do some sanity checks */
 		if (args.length < 2) {
 			System.err.println("ussage: Main <user.properties> <password>");
 			System.exit(-1);
@@ -79,11 +84,14 @@ public class Main {
 		}
 		
 		UserProperties.load(args[0], args[1]); 
+		
+		/* start server and monitoring tool */
+		
 		final HttpServer server = startServer();
 		
-		 ThreadPoolMonitor monitor = new ThreadPoolMonitor(RequestHandlerPool.getInstance(), 3);
-	     Thread monitorThread = new Thread(monitor);
-	     monitorThread.start();
+		ThreadPoolMonitor monitor = new ThreadPoolMonitor(RequestHandlerPool.getInstance(), 5);
+	    Thread monitorThread = new Thread(monitor);
+	    monitorThread.start();
 
 		log.info(String.format("Jersey app started with WADL available at %s\nHit enter to stop it...", BASE_URI));
 		System.in.read();

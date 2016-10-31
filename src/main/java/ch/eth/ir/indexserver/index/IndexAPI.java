@@ -24,15 +24,12 @@ import ch.eth.ir.indexserver.server.response.QueryTermResponse;
 /**
  * Singleton class IndexAPI 
  * 
- * Interface between the web server and the Lucene index. Performs queries and
- * retrieval against the index ands provides the results as beans for the web 
- * service.
- * 
- * Lucene's internal caching and optimizations require the existence of a 
- * single index reader and searcher. To avoid creating one reader per request,
- * this class is designed as a singleton and gets injected wherever needed.
+ * Interface between the web server and the Lucene index. Lucene's internal caching 
+ * and optimizations require the existence of a single IndexReader and IndexSearcher.
+ * To avoid creating one reader per thread, this class is designed as a singleton and 
+ * gets injected wherever needed.
  * Note since IndexReader and IndexSearcher are both thread-safe this class
- * is thread safe as well.
+ * is considered thread safe as well.
  */
 @Singleton
 public class IndexAPI {
@@ -63,9 +60,16 @@ public class IndexAPI {
 			log.fatal("could not instantiate index reader",e);
 			reader = null;
 		}
-		searcher = new IndexSearcher(reader);		
+		searcher = new IndexSearcher(reader);	
+		
+		/* 
+		 * IMPORTANT NOTE!
+		 * IF YOU USE A DIFFERENT ANALYZER ON INDEX CREATION CHANGE IT HERE AS WELL
+		 * 
+		 */
 		analyzer = new StandardAnalyzer();
-				
+			
+		/* load static properties */
 		Properties props = new Properties();
 		FileInputStream stream = new FileInputStream("./index/index.properties");
 		props.load(stream);
@@ -104,21 +108,30 @@ public class IndexAPI {
 	}
 	
 	/**
-	 * Returns the maximum document id in the index, documents are indext from 
+	 * Returns the maximum document id in the index, documents are indexed from 
 	 * id 0 to maxDocId
 	 */
-	public int getMaxDocId() throws IOException {
+	public int getMaxDocId() {
 		return maxDocId;
 	}
 	
-	public long getTotalNumberOfTerms() throws IOException {
+	/**
+	 * Returns the total number of terms in the indexed collection
+	 */
+	public long getTotalNumberOfTerms() {
 		return this.totalTokens;
 	}
 	
+	/**
+	 * Returns the total number of unique terms in the indexed collection
+	 */
 	public long getNumberOfUniqueTerms() {
 		return this.uniqueTokens;
 	}
 	
+	/** 
+	 * Returns the average document length
+	 */
 	public int getAverageDocumentLength() {
 		return this.averageDocumentLenght;
 	}

@@ -15,7 +15,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 
 import ch.eth.ir.indexserver.index.IndexAPI;
-import ch.eth.ir.indexserver.server.config.RequestProperties;
+import ch.eth.ir.indexserver.server.config.ServerProperties;
 import ch.eth.ir.indexserver.server.exception.BatchLimitExceededException;
 import ch.eth.ir.indexserver.server.exception.IllegalDocumentIdentifierException;
 import ch.eth.ir.indexserver.server.request.TermVectorsBatchRequest;
@@ -42,7 +42,7 @@ public class DocumentResource extends AbstractAsynchronousResource {
 		int maxDocId = indexAPI.getMaxDocId();
 		
 		/* check for ill formed requests */
-		if (ids.size() > RequestProperties.MAX_BATCH_REQ_ALLOWED) {
+		if (ids.size() > ServerProperties.MAX_BATCH_REQ_ALLOWED) {
 			throw new BatchLimitExceededException();
 		}
 		/* check for wrong doc-ids in the request */

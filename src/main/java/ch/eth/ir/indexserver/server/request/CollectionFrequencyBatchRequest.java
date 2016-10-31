@@ -11,7 +11,10 @@ import ch.eth.ir.indexserver.index.IndexConstants;
 import ch.eth.ir.indexserver.server.response.FrequencyBatchResponse;
 import ch.eth.ir.indexserver.server.response.FrequencyBean;
 
-public class CollectionFrequencyBatchRequest extends AbstractRequest<FrequencyBatchResponse>{
+/** 
+ * Returns the collection frequency for a list (batch) of terms
+ */
+public class CollectionFrequencyBatchRequest extends AbstractAsynchronousRequest<FrequencyBatchResponse>{
 
 	private Set<String> terms;
 	private IndexReader reader;
@@ -32,6 +35,9 @@ public class CollectionFrequencyBatchRequest extends AbstractRequest<FrequencyBa
 		return reader.totalTermFreq(luceneTerm);
 	}
 	
+	/**
+	 * Performs the batch request 
+	 */
 	@Override
 	public FrequencyBatchResponse call() throws Exception {
 		FrequencyBatchResponse frequencyBatch = new FrequencyBatchResponse();

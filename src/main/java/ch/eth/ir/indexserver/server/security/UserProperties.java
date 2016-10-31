@@ -69,9 +69,7 @@ public class UserProperties {
 	 */
 	public static void increaseRequestCount(String userName) {
 		if (requestCount.containsKey(userName))
-			//synchronized (requestCount) {
 			requestCount.put(userName, requestCount.get(userName)+1);
-			//}
 	}
 
 	/**
@@ -81,6 +79,9 @@ public class UserProperties {
 		return credentials.get(token);
 	}
 
+	/** 
+	 * Returns the request count for a given username
+	 */
 	public static int getRequestsForUser(String name) {
 		if (requestCount.containsKey(name)) {
 			return requestCount.get(name);

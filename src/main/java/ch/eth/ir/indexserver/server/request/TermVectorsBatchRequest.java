@@ -14,9 +14,11 @@ import ch.eth.ir.indexserver.index.IndexConstants;
 import ch.eth.ir.indexserver.server.response.DocumentVectorBatchResponse;
 import ch.eth.ir.indexserver.server.response.DocumentVectorBean;
 
-public class TermVectorsBatchRequest extends AbstractRequest<DocumentVectorBatchResponse> {
-	//TODOprivate static Logger logger = Logger.getLogger(QueryDocumentsRequest.class);
-
+/**
+ * Retrieve a batch of term vectors for given documents
+ */
+public class TermVectorsBatchRequest extends AbstractAsynchronousRequest<DocumentVectorBatchResponse> {
+	
 	private IndexReader reader;
 	private List<Integer> ids;
 	
@@ -43,6 +45,9 @@ public class TermVectorsBatchRequest extends AbstractRequest<DocumentVectorBatch
 		return new DocumentVectorBean(docId, documentVector);
 	}
 	
+	/**
+	 * Perform the request
+	 */
 	@Override
 	public DocumentVectorBatchResponse call() throws Exception {
 		DocumentVectorBatchResponse batchResponse = new DocumentVectorBatchResponse();

@@ -2,6 +2,9 @@ package ch.eth.ir.indexserver.server.threadpool;
 
 import java.util.concurrent.ThreadPoolExecutor;
 
+/**
+ * Monitors the thread pool and constantly outputs its status
+ */
 public class ThreadPoolMonitor implements Runnable {
 	private ThreadPoolExecutor executor;
 	private int seconds;
@@ -20,10 +23,12 @@ public class ThreadPoolMonitor implements Runnable {
 	public void run() {
 		while (run) {
 			System.out.println(String.format(
-					"[monitor] [%d/%d] Active: %d, Completed: %d, Task: %d, isShutdown: %s, isTerminated: %s",
-					this.executor.getPoolSize(), this.executor.getCorePoolSize(), this.executor.getActiveCount(),
+					"[monitor] [%d/%d] Queue-Size: %d Active: %d, Completed: %d, Task: %d, isShutdown: %s, isTerminated: %s",
+					this.executor.getPoolSize(), this.executor.getCorePoolSize(), executor.getQueue().size(),
+					this.executor.getActiveCount(),
 					this.executor.getCompletedTaskCount(), this.executor.getTaskCount(), this.executor.isShutdown(),
 					this.executor.isTerminated()));
+			executor.getQueue().size();
 			try {
 				Thread.sleep(seconds * 1000);
 			} catch (InterruptedException e) {

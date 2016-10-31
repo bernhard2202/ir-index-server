@@ -13,13 +13,13 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.BooleanClause.Occur;
 
 import ch.eth.ir.indexserver.index.IndexConstants;
-import ch.eth.ir.indexserver.server.config.RequestProperties;
+import ch.eth.ir.indexserver.server.config.ServerProperties;
 import ch.eth.ir.indexserver.server.response.QueryResultResponse;
 
 /**
  * Queries documents from the index
  */
-public class QueryDocumentsRequest extends AbstractRequest<QueryResultResponse> {
+public class QueryDocumentsRequest extends AbstractAsynchronousRequest<QueryResultResponse> {
 	private IndexSearcher searcher;
 	private Set<String> terms;
 	private int nOverlappingTerms;
@@ -55,11 +55,11 @@ public class QueryDocumentsRequest extends AbstractRequest<QueryResultResponse> 
 		// create query and search
 		Query query = buildQuery();
 		TopDocs luceneResult = null;
-		luceneResult = searcher.search(query, RequestProperties.MAX_SEARCH_RESULTS);
+		luceneResult = searcher.search(query, ServerProperties.MAX_SEARCH_RESULTS);
 		
 		// extract document id's
 		ArrayList<Integer> docIds = new ArrayList<Integer>(luceneResult.totalHits);
-		int max = Math.min(RequestProperties.MAX_SEARCH_RESULTS, luceneResult.totalHits);
+		int max = Math.min(ServerProperties.MAX_SEARCH_RESULTS, luceneResult.totalHits);
 		for (int i = 0; i < max; i++) {
 			docIds.add(luceneResult.scoreDocs[i].doc);
 		}

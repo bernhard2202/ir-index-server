@@ -42,10 +42,10 @@ import ch.eth.ir.indexserver.index.IndexConstants;
 
 /**
  * Index writer for the TIPSTER corpus
- * Given the root directory, all TIPSTER-zip-files are read and 
- * their contents added written to an new index.
- * Furthermore some statistics (which wont change but are time intense to extract) 
- * are extracted and written to a properties file to safe runtime. 
+ * Given the root directory, all TIPSTER .zip files are read and 
+ * their XML-File content extracted and written to an new index.
+ * Furthermore some statistics (which wont change over time but are time intense to extract) 
+ * are calculated and written to a properties file to safe runtime. 
  */
 public class TIPSTERCorpusIndexer {
 	private static Logger log = Logger.getLogger(TIPSTERCorpusIndexer.class);
@@ -81,9 +81,11 @@ public class TIPSTERCorpusIndexer {
 		writer.close();
 	}
 
-	/* index the entry of a zip file */
+	/** 
+	 * Index a single XML file in the corpus, extract the documentNumber and content 
+	 */
 	private void indexZipEntry(ZipFile zipFile, ZipEntry zipEntry) throws IOException, DocumentException {
-//		log.debug("Indexing file: " + zipEntry.getName());
+		log.debug("Indexing file: " + zipEntry.getName());
 		
 		// extract the file content
 		InputStream contentStream = zipFile.getInputStream(zipEntry);
@@ -95,9 +97,16 @@ public class TIPSTERCorpusIndexer {
         	return;
         }
 
+        /*
+         * CHANGE THIS CODE IF XML FILE STRUCTURE CHANGED 
+         */
         Node titleNode = XMLDocument.selectSingleNode( "/DOC/DOCNO");	
 		String title = titleNode==null ? "" : titleNode.getText();
         
+        /*
+         * CHANGE THIS CODE IF XML FILE STRUCTURE CHANGED 
+         */
+		@SuppressWarnings("unchecked")
 		List<Node> contentNodes = XMLDocument.selectNodes("/DOC/TEXT");
 		StringBuffer contentB = new StringBuffer();
 		for (Node node : contentNodes) {
@@ -107,7 +116,7 @@ public class TIPSTERCorpusIndexer {
 		
 		IOUtils.closeQuietly(contentStream);
 		
-		// index file contents
+		// index file content
 		Field contentField = new Field(IndexConstants.CONTENT, content.trim(), contentFieldType);
 		// index file name
 		Field fileNameField = new StringField(IndexConstants.TITLE, title.trim(), Store.YES);
