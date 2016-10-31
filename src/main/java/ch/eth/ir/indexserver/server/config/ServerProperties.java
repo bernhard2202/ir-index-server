@@ -34,6 +34,11 @@ public class ServerProperties {
 	public final static int TIMEOUT = 100;
 	
 	/**
+	 * Time between resetting user's request priority:
+	 */
+	public final static long DELAY_BETWEEN_RESET = (long) 8.64e+7;
+	
+	/**
 	 * Error message shown on a timeout
 	 */
 	public final static String TIMEOUT_ERROR_MSG = 

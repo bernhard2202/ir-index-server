@@ -7,13 +7,16 @@ import org.glassfish.jersey.server.ResourceConfig;
 
 import ch.eth.ir.indexserver.index.IndexAPI;
 import ch.eth.ir.indexserver.server.config.ApplicationResourceConfig;
+import ch.eth.ir.indexserver.server.config.ServerProperties;
 import ch.eth.ir.indexserver.server.security.UserProperties;
 import ch.eth.ir.indexserver.server.threadpool.RequestHandlerPool;
+import ch.eth.ir.indexserver.server.threadpool.ResetUserPrioritiesJob;
 import ch.eth.ir.indexserver.server.threadpool.ThreadPoolMonitor;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -84,7 +87,14 @@ public class Server {
 		}
 
 		UserProperties.load(args[0], args[1]);
-
+		
+		/* activate cron to reset user priorities regularly */
+		
+		Timer t = new Timer();
+		ResetUserPrioritiesJob resetUserPriority = new ResetUserPrioritiesJob();
+	    t.scheduleAtFixedRate(resetUserPriority, 0, ServerProperties.DELAY_BETWEEN_RESET);
+	    log.info("Reset user priorities every (ms): "+ServerProperties.DELAY_BETWEEN_RESET);
+	    
 		/* start server and monitoring tool */
 
 		final HttpServer server = startServer();

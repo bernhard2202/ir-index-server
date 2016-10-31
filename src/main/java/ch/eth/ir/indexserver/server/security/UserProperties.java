@@ -64,6 +64,13 @@ public class UserProperties {
 		return credentials.containsKey(token);
 	}
 	
+	public static void resetRequestCounts() {
+		log.warn("Reset user priorities");
+		for (String username : credentials.values()) {
+			requestCount.put(username, 0);
+		}
+	}
+	
 	/**
 	 * Increase the request count for the given user by one
 	 */
