@@ -1,3 +1,6 @@
+#scripts
+*.sh
+
 # index and corpus
 index/*
 corpus/*

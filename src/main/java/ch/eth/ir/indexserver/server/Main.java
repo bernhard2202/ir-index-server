@@ -8,14 +8,14 @@ import org.glassfish.jersey.server.ResourceConfig;
 import ch.eth.ir.indexserver.index.IndexAPI;
 import ch.eth.ir.indexserver.server.config.ApplicationResourceConfig;
 import ch.eth.ir.indexserver.server.security.UserProperties;
+import ch.eth.ir.indexserver.server.threadpool.RequestHandlerPool;
+import ch.eth.ir.indexserver.server.threadpool.ThreadPoolMonitor;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Optional;
-
 /**
- * Main class for starting server
+ * Main class for starting  the server
  */
 public class Main {
 
@@ -24,16 +24,27 @@ public class Main {
 	
 	public static final String BASE_URI;
     public static final String protocol;
-    public static final Optional<String> host;
+    public static final String host;
     public static final String path;
-    public static final Optional<String> port;
+    public static final String port;
    
-    static{
+    
+    /*
+     * CONFIGURE SERVER HOSTNAME, PORT, ETC HERE:
+     */
+    static {
         protocol = "http://";
-        host = Optional.ofNullable(System.getenv("HOSTNAME"));
-        port = Optional.ofNullable(System.getenv("PORT"));
+        host = System.getenv("HOSTNAME");
+        port = System.getenv("PORT");
         path = "irserver";
-        BASE_URI = protocol + host.orElse("localhost") + ":" + port.orElse("8080") + "/" + path + "/";
+        StringBuffer uri = new StringBuffer(protocol);
+        uri.append(host==null?"localhost":host);
+        uri.append(":");
+        uri.append(port==null?"8080":port);
+        uri.append("/");
+        uri.append(path);
+        uri.append("/");
+        BASE_URI = uri.toString();
     }
 	
 	/**
@@ -54,6 +65,7 @@ public class Main {
 	}
 
 	public static void main(String[] args) throws IOException {
+		/* load properties and do some sanity checks */
 		if (args.length < 2) {
 			System.err.println("ussage: Main <user.properties> <password>");
 			System.exit(-1);
@@ -72,11 +84,21 @@ public class Main {
 		}
 		
 		UserProperties.load(args[0], args[1]); 
+		
+		/* start server and monitoring tool */
+		
 		final HttpServer server = startServer();
+		
+		ThreadPoolMonitor monitor = new ThreadPoolMonitor(RequestHandlerPool.getInstance(), 5);
+	    Thread monitorThread = new Thread(monitor);
+	    monitorThread.start();
 
 		log.info(String.format("Jersey app started with WADL available at %s\nHit enter to stop it...", BASE_URI));
 		System.in.read();
 
+		RequestHandlerPool.getInstance().shutdownNow();
+		monitor.shutdown();
 		server.shutdownNow();
+		
 	}
 }

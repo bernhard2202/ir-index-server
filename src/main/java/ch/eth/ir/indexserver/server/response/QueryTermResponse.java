@@ -1,14 +1,14 @@
-package ch.eth.ir.indexserver.server.resource.beans;
+package ch.eth.ir.indexserver.server.response;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class QueryBean {
+public class QueryTermResponse extends AbstractResponse {
 	private List<String> queryTerms;
 	
-	public QueryBean() {
+	public QueryTermResponse() {
 		this.queryTerms = new ArrayList<String>();
 	}
 	

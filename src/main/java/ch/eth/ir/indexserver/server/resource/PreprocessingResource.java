@@ -10,7 +10,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import ch.eth.ir.indexserver.index.IndexAPI;
-import ch.eth.ir.indexserver.server.resource.beans.QueryBean;
+import ch.eth.ir.indexserver.server.response.QueryTermResponse;
 import ch.eth.ir.indexserver.server.security.Secured;
 
 @Secured
@@ -22,7 +22,7 @@ public class PreprocessingResource {
 	
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public QueryBean preprocessQuery(@QueryParam("query")String query) throws IOException {
+	public QueryTermResponse preprocessQuery(@QueryParam("query")String query) throws IOException {
 		return indexApi.preprocess(query);
 	}
 }

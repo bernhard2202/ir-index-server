@@ -6,7 +6,7 @@ import javax.ws.rs.core.Response;
 
 
 /**
- * Exception thrown when user tries to request a document with an ID not in range.
+ * Exception thrown when user tries to request a document with an ID not in range
  */
 public class IllegalDocumentIdentifierException  extends WebApplicationException {
 	public IllegalDocumentIdentifierException() {

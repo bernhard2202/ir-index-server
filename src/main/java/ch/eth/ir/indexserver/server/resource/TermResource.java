@@ -1,21 +1,24 @@
 package ch.eth.ir.indexserver.server.resource;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.SecurityContext;
 
 import ch.eth.ir.indexserver.index.IndexAPI;
-import ch.eth.ir.indexserver.server.config.RequestProperties;
+import ch.eth.ir.indexserver.server.config.ServerProperties;
 import ch.eth.ir.indexserver.server.exception.BatchLimitExceededException;
-import ch.eth.ir.indexserver.server.resource.beans.DocumentVectorBatch;
-import ch.eth.ir.indexserver.server.resource.beans.FrequencyBatch;
-import ch.eth.ir.indexserver.server.resource.beans.FrequencyBean;
+import ch.eth.ir.indexserver.server.request.CollectionFrequencyBatchRequest;
+import ch.eth.ir.indexserver.server.request.DocumentFrequencyBatchRequest;
 import ch.eth.ir.indexserver.server.security.Secured;
 
 /**
@@ -23,36 +26,46 @@ import ch.eth.ir.indexserver.server.security.Secured;
  */
 @Secured
 @Path("term")
-public class TermResource {
+public class TermResource extends AbstractAsynchronousResource {
 	@Inject
 	private IndexAPI indexAPI;
 	
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("df")
-	public FrequencyBatch getDocumentFrequency(@QueryParam("term") List<String> terms) throws IOException {
-		FrequencyBatch frequencyBatch = new FrequencyBatch();
-		if (terms.size() > RequestProperties.MAX_BATCH_REQ_ALLOWED) {
+	public void getDocumentFrequency(
+			@Suspended final AsyncResponse asyncResponse,
+			@QueryParam("term") Set<String> terms,
+			@Context SecurityContext securityContext) throws IOException {
+		
+		/* check for ill formed request */
+		if (terms.size() > ServerProperties.MAX_BATCH_REQ_ALLOWED) {
 			throw new BatchLimitExceededException();
 		}
-		for (String term : terms) {
-			frequencyBatch.addFrequency(new FrequencyBean(term,indexAPI.getDocumentFrequency(term)));
-		}
-		return frequencyBatch;
+		
+		this.performAsyncRequest(
+				asyncResponse,
+				new DocumentFrequencyBatchRequest(terms, indexAPI.getReader()),
+				securityContext);
 	}
 	
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("cf")
-	public FrequencyBatch getCollectionFrequency(@QueryParam("term") List<String> terms) throws IOException {
-		FrequencyBatch frequencyBatch = new FrequencyBatch();
-		if (terms.size() > RequestProperties.MAX_BATCH_REQ_ALLOWED) {
+	public void getCollectionFrequency(
+			@Suspended final AsyncResponse asyncResponse,
+			@QueryParam("term") Set<String> terms,
+			@Context SecurityContext securityContext) throws IOException {
+		
+		/* check for ill formed request */
+		if (terms.size() > ServerProperties.MAX_BATCH_REQ_ALLOWED) {
 			throw new BatchLimitExceededException();
 		}
-		for (String term : terms) {
-			frequencyBatch.addFrequency(new FrequencyBean(term,indexAPI.getCollectionFrequency(term)));
-		}
-		return frequencyBatch;
+		
+		this.performAsyncRequest(
+				asyncResponse,
+				new CollectionFrequencyBatchRequest(terms, indexAPI.getReader()),
+				securityContext);
 	}
 	
 	@GET

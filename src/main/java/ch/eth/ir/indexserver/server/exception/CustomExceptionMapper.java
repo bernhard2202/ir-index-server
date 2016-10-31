@@ -10,6 +10,9 @@ import org.apache.log4j.Logger;
 
 import ch.eth.ir.indexserver.index.IndexAPI;
 
+/**
+ * Catches general exceptions, logs them, and returns a 501 Internal Server Error
+ */
 @Provider
 public class CustomExceptionMapper implements ExceptionMapper<Exception> {
 	private static Logger log = Logger.getLogger(IndexAPI.class);

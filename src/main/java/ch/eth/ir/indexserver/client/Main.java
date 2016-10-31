@@ -1,9 +1,11 @@
 package ch.eth.ir.indexserver.client;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -12,18 +14,21 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import ch.eth.ir.indexserver.server.resource.beans.DocumentVectorBatch;
-import ch.eth.ir.indexserver.server.resource.beans.QueryResultBean;
+import ch.eth.ir.indexserver.server.response.DocumentVectorBatchResponse;
+import ch.eth.ir.indexserver.server.response.QueryResultResponse;
 
 public class Main {
 	public static void main(String[] args) {
+		if (args.length != 2 || args[0].length()>100 || args[1].length()>100) {
+			System.out.println("usage client <url> <token>");
+			System.exit(-1);
+		}
 		Client client = ClientBuilder.newClient();
-		WebTarget target = client.target("http://idvm-infk-hofmann04.inf.ethz.ch:8080/irserver/");
-//		WebTarget target = client.target("http://localhost:8080/irserver/");
+//		WebTarget target = client.target("http://idvm-infk-hofmann04.inf.ethz.ch:8080/irserver/");
+		WebTarget target = client.target(args[0]);
 		Random rand = new Random();
 		
-		String credentials = "Bearer 1audh2egrg542je98292t92l35";
-//		String credentials = "Bearer svifpfvdl9fqso91t8fgs8432j";
+		String credentials = "Bearer "+args[1];
 		int requestDocumentNotOk = 0;
 		int requestDocumentOk=0;
 		int requestQueryOk=0;
@@ -35,13 +40,13 @@ public class Main {
 		long responseTimeQuery=0;
 		long responseTimeDoc=0;
 
-		int maxRequest = 1000;
+		int maxRequest = 100000;
 		
 		for (; i < maxRequest+1; i++) {
 			try {
 				WebTarget requestTarget = target.path("document/vector");
 				for (int j=0; j<99; j++) {
-					requestTarget = requestTarget.queryParam("id", rand.nextInt(1078050)+1);
+					requestTarget = requestTarget.queryParam("id", rand.nextInt(828916)+1);
 				}
 				Invocation.Builder invocationBuilder =
 						requestTarget.request(MediaType.APPLICATION_JSON);
@@ -51,6 +56,7 @@ public class Main {
 				
 				Response response = invocationBuilder.get();
 				
+				
 				responseTimeDoc += (System.currentTimeMillis()-startR);
 				
 				if (response.getStatus()!=200) {
@@ -58,23 +64,34 @@ public class Main {
 				} else {
 					requestDocumentOk++;
 				}
-								
-				DocumentVectorBatch batch = response.readEntity(DocumentVectorBatch.class);
+				DocumentVectorBatchResponse batch = null;
+				try {
+					batch = response.readEntity(DocumentVectorBatchResponse.class);
+				} catch (Exception e) {
+					e.printStackTrace(System.err);
+					
+					System.err.println(response.readEntity(String.class));
+					requestFailedWithException++;
+					continue;
+				}
 				response.close();
 				
-				if (batch.getDocumentVectors().size() > 0) {
+				if (batch != null && batch.getDocumentVectors().size() > 0) {
 					if (batch.getDocumentVectors().get(0).getTermFrequencies().size() > 3) {
 						Map<String, Long> termVector = batch.getDocumentVectors().get(0).getTermFrequencies();
 						List<String> terms = new ArrayList<String>();
 						terms.addAll(termVector.keySet());
 						
 						requestTarget = target.path("index/query");
-						
+						Set<String> queryTerms = new HashSet<String>();
 						for (int j=0; j<4; j++) {
 							int index = rand.nextInt(termVector.size());
-							requestTarget = requestTarget.queryParam("term", terms.get(index));
+							queryTerms.add(terms.get(index));
 						}
-						requestTarget = requestTarget.queryParam("minOverlap", 3);
+						
+						for (String s : queryTerms)
+							requestTarget = requestTarget.queryParam("term",s);
+						requestTarget = requestTarget.queryParam("minOverlap", Math.min(queryTerms.size(), 3));
 						
 						invocationBuilder = requestTarget.request(MediaType.APPLICATION_JSON);
 						invocationBuilder.header("Authorization", credentials);
@@ -84,9 +101,15 @@ public class Main {
 						response = invocationBuilder.get();
 						responseTimeQuery += (System.currentTimeMillis()-startR);
 						
-						@SuppressWarnings("unused")
-						QueryResultBean queryResult = response.readEntity(QueryResultBean.class);
+						try {
+							@SuppressWarnings("unused")
+							QueryResultResponse queryResult = response.readEntity(QueryResultResponse.class);
+						} catch (Exception e) {
+							e.printStackTrace(System.err);
 
+							System.err.println(response.readEntity(String.class));
+							requestFailedWithException++;
+						}
 						if (response.getStatus()!=200) {
 							requestQueryNotOk++;
 						} else {
@@ -99,6 +122,7 @@ public class Main {
 
 				if(i%100==0) {
 					System.out.println(i+"/"+maxRequest);
+					System.out.println((responseTimeDoc/(requestDocumentOk+requestDocumentNotOk+1)));
 				}
 				System.out.print(".");
 			} catch (Exception e) {

@@ -9,6 +9,9 @@ import ch.eth.ir.indexserver.server.security.AuthenticationFilter;
 public class ApplicationResourceConfig extends ResourceConfig {
 
 	public ApplicationResourceConfig() {
+		/* 
+		 *  ADD PACKAGES WHERE RESOURCES ARE LOCATED BELOW:
+		 */
 		packages("ch.eth.ir.indexserver.server.resource");
 		// Set this property so that the 400 will still send the entity
 		// correctly.

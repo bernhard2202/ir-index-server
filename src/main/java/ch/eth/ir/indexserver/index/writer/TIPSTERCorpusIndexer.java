@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
@@ -41,10 +42,10 @@ import ch.eth.ir.indexserver.index.IndexConstants;
 
 /**
  * Index writer for the TIPSTER corpus
- * Given the root directory, all TIPSTER-zip-files are read and 
- * their contents added written to an new index.
- * Furthermore some statistics (which wont change but are time intense to extract) 
- * are extracted and written to a properties file to safe runtime. 
+ * Given the root directory, all TIPSTER .zip files are read and 
+ * their XML-File content extracted and written to an new index.
+ * Furthermore some statistics (which wont change over time but are time intense to extract) 
+ * are calculated and written to a properties file to safe runtime. 
  */
 public class TIPSTERCorpusIndexer {
 	private static Logger log = Logger.getLogger(TIPSTERCorpusIndexer.class);
@@ -80,7 +81,9 @@ public class TIPSTERCorpusIndexer {
 		writer.close();
 	}
 
-	/* index the entry of a zip file */
+	/** 
+	 * Index a single XML file in the corpus, extract the documentNumber and content 
+	 */
 	private void indexZipEntry(ZipFile zipFile, ZipEntry zipEntry) throws IOException, DocumentException {
 		log.debug("Indexing file: " + zipEntry.getName());
 		
@@ -90,18 +93,30 @@ public class TIPSTERCorpusIndexer {
         org.dom4j.Document XMLDocument = reader.read(contentStream);
         
         if (XMLDocument==null) {
+        	System.out.println(zipEntry.getName());
         	return;
         }
 
-        Node titleNode = XMLDocument.selectSingleNode( "/DOC/DOCNO");
-		Node contentNode = XMLDocument.selectSingleNode("/DOC/TEXT");
-		
+        /*
+         * CHANGE THIS CODE IF XML FILE STRUCTURE CHANGED 
+         */
+        Node titleNode = XMLDocument.selectSingleNode( "/DOC/DOCNO");	
 		String title = titleNode==null ? "" : titleNode.getText();
-		String content = contentNode==null ? "" : contentNode.getText();
-
+        
+        /*
+         * CHANGE THIS CODE IF XML FILE STRUCTURE CHANGED 
+         */
+		@SuppressWarnings("unchecked")
+		List<Node> contentNodes = XMLDocument.selectNodes("/DOC/TEXT");
+		StringBuffer contentB = new StringBuffer();
+		for (Node node : contentNodes) {
+			contentB.append(node.getText());
+		}
+		String content = contentB.toString();
+		
 		IOUtils.closeQuietly(contentStream);
 		
-		// index file contents
+		// index file content
 		Field contentField = new Field(IndexConstants.CONTENT, content.trim(), contentFieldType);
 		// index file name
 		Field fileNameField = new StringField(IndexConstants.TITLE, title.trim(), Store.YES);
@@ -165,7 +180,7 @@ public class TIPSTERCorpusIndexer {
 	 * since they are comp. intense to extract and they wont change unless the
 	 * index gets rebuild we safe a lot of comp. time by doing this 
 	 */
-	private void writeIndexStatistics() throws IOException {
+	private void writeIndexStatistics(int maxDocId) throws IOException {
 		Directory indexDirectory = FSDirectory.open(INDEX_DIR.toPath());
 		IndexReader indexReader = DirectoryReader.open(indexDirectory);
 		
@@ -190,6 +205,7 @@ public class TIPSTERCorpusIndexer {
 		props.setProperty("terms.total", String.valueOf(total));
 		props.setProperty("terms.unique", String.valueOf(unique));
 		props.setProperty("document.average.length", String.valueOf(avgDl));
+		props.setProperty("document.max.id", String.valueOf(maxDocId));
 		
 		props.store(stream, "IndexProperties - do not change manually!");
 		
@@ -237,9 +253,11 @@ public class TIPSTERCorpusIndexer {
 		}
 	    long endTime = System.currentTimeMillis();
 	    log.info(indexer.writer.numDocs()+" files indexed; time taken: "+(endTime-startTime)+" ms");		
-		indexer.close();
 		
+		int maxDocId = indexer.writer.numDocs();
+		indexer.close();
+
 		log.info("write constant index statistics to properties file...");
-		indexer.writeIndexStatistics();
+		indexer.writeIndexStatistics(maxDocId);
 	}
 }

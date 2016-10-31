@@ -3,11 +3,6 @@ package ch.eth.ir.indexserver.index;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import javax.inject.Singleton;
@@ -19,36 +14,22 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.Terms;
-import org.apache.lucene.index.TermsEnum;
-import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.util.BytesRef;
 
-import ch.eth.ir.indexserver.server.resource.beans.DocumentVectorBean;
-import ch.eth.ir.indexserver.server.resource.beans.QueryBean;
-import ch.eth.ir.indexserver.server.resource.beans.QueryResultBean;
+import ch.eth.ir.indexserver.server.response.QueryTermResponse;
 
 
 /**
  * Singleton class IndexAPI 
  * 
- * Interface between the web server and the Lucene index. Performs queries and
- * retrieval against the index ands provides the results as beans for the web 
- * service.
- * 
- * Lucene's internal caching and optimizations require the existence of a 
- * single index reader and searcher. To avoid creating one reader per request,
- * this class is designed as a singleton and gets injected wherever needed.
+ * Interface between the web server and the Lucene index. Lucene's internal caching 
+ * and optimizations require the existence of a single IndexReader and IndexSearcher.
+ * To avoid creating one reader per thread, this class is designed as a singleton and 
+ * gets injected wherever needed.
  * Note since IndexReader and IndexSearcher are both thread-safe this class
- * is thread safe as well.
+ * is considered thread safe as well.
  */
 @Singleton
 public class IndexAPI {
@@ -61,7 +42,7 @@ public class IndexAPI {
 	private int averageDocumentLenght = -1;
 	private long totalTokens = -1;
 	private long uniqueTokens = -1;
-	private int documentCount = -1;
+	private int maxDocId = -1;
 	
 	
 	public IndexAPI() throws IOException {
@@ -79,11 +60,16 @@ public class IndexAPI {
 			log.fatal("could not instantiate index reader",e);
 			reader = null;
 		}
-		searcher = new IndexSearcher(reader);		
+		searcher = new IndexSearcher(reader);	
+		
+		/* 
+		 * IMPORTANT NOTE!
+		 * IF YOU USE A DIFFERENT ANALYZER ON INDEX CREATION CHANGE IT HERE AS WELL
+		 * 
+		 */
 		analyzer = new StandardAnalyzer();
-		
-		documentCount = reader.getDocCount(IndexConstants.CONTENT);
-		
+			
+		/* load static properties */
 		Properties props = new Properties();
 		FileInputStream stream = new FileInputStream("./index/index.properties");
 		props.load(stream);
@@ -91,75 +77,24 @@ public class IndexAPI {
 		averageDocumentLenght = Integer.parseInt(props.getProperty("document.average.length"));
 		totalTokens = Long.parseLong(props.getProperty("terms.total"));
 		uniqueTokens = Long.parseLong(props.getProperty("terms.unique"));
+		maxDocId = Integer.parseInt(props.getProperty("document.max.id"));
 	}
 	
-	/**
-	 * Builds a Lucene query which searches for all documents which contain at least
-	 * minimTermsShouldMatch terms of the given terms.
-	 */
-	private Query buildQuery(List<String> terms, int minimumTermsShouldMatch) {
-		BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
-		queryBuilder.setMinimumNumberShouldMatch(minimumTermsShouldMatch);
-		for (String term : terms) {
-			Term queryTerm = new Term(IndexConstants.CONTENT, term);
-			queryBuilder.add(new TermQuery(queryTerm), Occur.SHOULD);
-		}
-		return queryBuilder.build();
+	public IndexSearcher getSearcher() {
+		return searcher;
 	}
 	
-	
-	/**
-	 * Retrieves a document vector for a given documentID
-	 */
-	public DocumentVectorBean getDocumentVector(int docId) throws IOException {
-		Map<String, Long> documentVector = new HashMap<String, Long>();
-		Terms docTerms = reader.getTermVector(docId, IndexConstants.CONTENT);
-		if (docTerms == null || docTerms.size() == 0) {
-			return new DocumentVectorBean(docId, documentVector);
-		}
-		TermsEnum termEnumerator = docTerms.iterator();
-		BytesRef text = null;
-		while ((text = termEnumerator.next()) != null) {
-			documentVector.put(text.utf8ToString(), termEnumerator.totalTermFreq());
-		}
-		return new DocumentVectorBean(docId, documentVector);
-	}
-	
-	/**
-	 * Returns all document id's of documents containing at least minimumTermsShouldMatch terms
-	 * of the given terms.
-	 */
-	public QueryResultBean findNOverlappingDocuments(int minimumTermsShouldMatch, List<String> terms) throws IOException {
-		QueryResultBean result = new QueryResultBean();
-		if (terms.size() < minimumTermsShouldMatch) {
-			log.warn("query will always be empty term.length < minimumTermsShouldMatch");
-			return result;
-		}
-		// create query and search
-		Query query = buildQuery(terms, minimumTermsShouldMatch);
-		TopDocs luceneResult = searcher.search(query, reader.maxDoc());
-		// no results
-		if (luceneResult.totalHits == 0) {
-			return result;
-		}
-		// extract document id's
-		ArrayList<Integer> docIds = new ArrayList<Integer>(luceneResult.totalHits);
-		for (int i = 0; i < luceneResult.totalHits; i++) {
-			docIds.add(luceneResult.scoreDocs[i].doc);
-		}
-		// shuffle the results to hide the ranking algorithm
-		Collections.shuffle(docIds);
-		result.addAllDocuments(docIds);
-		return result;
-	}
-	
+	public IndexReader getReader() {
+		return reader;
+	}	
+
 	/**
 	 * Applies the same preprocessing, word filtering and term splitting to the given query
 	 * as was used for the documents at building time of the index 
 	 * @throws IOException 
 	 */
-	public QueryBean preprocess(String query) throws IOException {
-		QueryBean terms = new QueryBean();
+	public QueryTermResponse preprocess(String query) throws IOException {
+		QueryTermResponse terms = new QueryTermResponse();
 		// create stream and add char term attribute
 		TokenStream stream = analyzer.tokenStream(IndexConstants.CONTENT, query);
 		CharTermAttribute cattr = stream.addAttribute(CharTermAttribute.class);
@@ -172,43 +107,31 @@ public class IndexAPI {
 		return terms;
 	}
 	
-	/** 
-	 * Returns the document frequency for a given term
-	 * @param term
-	 * @return Document frequency of the term
+	/**
+	 * Returns the maximum document id in the index, documents are indexed from 
+	 * id 0 to maxDocId
 	 */
-	public int getDocumentFrequency(String term) throws IOException {
-		Term luceneTerm = new Term(IndexConstants.CONTENT, new BytesRef(term));
-		return reader.docFreq(luceneTerm);
-	}
-	
-	/** 
-	 * Returns the collection frequency for a given term
-	 * @param term
-	 * @return Collection frequency of the term
-	 */
-	public long getCollectionFrequency(String term) throws IOException {
-		Term luceneTerm = new Term(IndexConstants.CONTENT, new BytesRef(term));
-		return reader.totalTermFreq(luceneTerm);
+	public int getMaxDocId() {
+		return maxDocId;
 	}
 	
 	/**
-	 * Returns the number of documents in the collection
-	 * @return
-	 * @throws IOException
+	 * Returns the total number of terms in the indexed collection
 	 */
-	public int getNumberOfDocuments() throws IOException {
-		return documentCount;
-	}
-	
-	public long getTotalNumberOfTerms() throws IOException {
+	public long getTotalNumberOfTerms() {
 		return this.totalTokens;
 	}
 	
+	/**
+	 * Returns the total number of unique terms in the indexed collection
+	 */
 	public long getNumberOfUniqueTerms() {
 		return this.uniqueTokens;
 	}
 	
+	/** 
+	 * Returns the average document length
+	 */
 	public int getAverageDocumentLength() {
 		return this.averageDocumentLenght;
 	}

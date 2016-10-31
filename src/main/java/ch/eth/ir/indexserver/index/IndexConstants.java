@@ -1,10 +1,12 @@
 package ch.eth.ir.indexserver.index;
 
 public class IndexConstants {
-	// Index directories
+	/**
+	 * The directory to write the index to
+	 */
 	public final static String INDEX_DIR = "index";
 	
-	// Fields:
+	// Fields (do not change)
 	public final static String CONTENT = "content";
 	public final static String TITLE = "title";
 }

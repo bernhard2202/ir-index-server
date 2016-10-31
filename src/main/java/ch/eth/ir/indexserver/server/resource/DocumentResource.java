@@ -8,13 +8,17 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.SecurityContext;
 
 import ch.eth.ir.indexserver.index.IndexAPI;
-import ch.eth.ir.indexserver.server.config.RequestProperties;
+import ch.eth.ir.indexserver.server.config.ServerProperties;
 import ch.eth.ir.indexserver.server.exception.BatchLimitExceededException;
 import ch.eth.ir.indexserver.server.exception.IllegalDocumentIdentifierException;
-import ch.eth.ir.indexserver.server.resource.beans.DocumentVectorBatch;
+import ch.eth.ir.indexserver.server.request.TermVectorsBatchRequest;
 import ch.eth.ir.indexserver.server.security.Secured;
 
 /**
@@ -22,7 +26,7 @@ import ch.eth.ir.indexserver.server.security.Secured;
  */
 @Secured
 @Path("document")
-public class DocumentResource {
+public class DocumentResource extends AbstractAsynchronousResource {
 
 	@Inject
 	private IndexAPI indexAPI;
@@ -30,21 +34,28 @@ public class DocumentResource {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("vector")
-	public DocumentVectorBatch getDocumentVectors(@QueryParam("id") List<Integer> ids) throws IOException {
-		DocumentVectorBatch batchResponse = new DocumentVectorBatch();
-		int maxDocId = indexAPI.getNumberOfDocuments();
+	public void getDocumentVectors(
+			@Suspended final AsyncResponse asyncResponse,
+			@QueryParam("id") List<Integer> ids,
+			@Context SecurityContext securityContext) throws IOException {
 		
-		if (ids.size() > RequestProperties.MAX_BATCH_REQ_ALLOWED) {
+		int maxDocId = indexAPI.getMaxDocId();
+		
+		/* check for ill formed requests */
+		if (ids.size() > ServerProperties.MAX_BATCH_REQ_ALLOWED) {
 			throw new BatchLimitExceededException();
 		}
-		
+		/* check for wrong doc-ids in the request */
 		for (int id : ids) {
-			if (id < 0 || id > maxDocId) {
+			if (id < 0 || id >= maxDocId) {
 				throw new IllegalDocumentIdentifierException();
 			}
-			batchResponse.addDocumentVector(indexAPI.getDocumentVector(id));
 		}
-		return batchResponse;
+		
+		this.performAsyncRequest(
+				asyncResponse,
+				new TermVectorsBatchRequest(indexAPI.getReader(), ids),
+				securityContext);
 	}
 	
 	@GET
@@ -56,6 +67,6 @@ public class DocumentResource {
 	@GET
 	@Path("count")
 	public int getDocumentCount() throws IOException {
-		return indexAPI.getNumberOfDocuments();
+		return indexAPI.getMaxDocId();
 	}
 }

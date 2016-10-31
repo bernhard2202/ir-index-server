@@ -1,8 +1,7 @@
 package ch.eth.ir.indexserver.server.resource;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.ws.rs.DefaultValue;
@@ -12,12 +11,13 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
-import javax.ws.rs.container.TimeoutHandler;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
 import ch.eth.ir.indexserver.index.IndexAPI;
-import ch.eth.ir.indexserver.server.resource.beans.QueryResultBean;
+import ch.eth.ir.indexserver.server.request.QueryDocumentsRequest;
 import ch.eth.ir.indexserver.server.security.Secured;
 
 /** 
@@ -25,7 +25,7 @@ import ch.eth.ir.indexserver.server.security.Secured;
  */
 @Secured
 @Path("index")
-public class IndexResource {
+public class IndexResource extends AbstractAsynchronousResource {
 	
 	@Inject
 	private IndexAPI indexAPI;
@@ -33,38 +33,20 @@ public class IndexResource {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("query")
-	public void findIdsForQuery(@Suspended final AsyncResponse asyncResponse,
+	public void findDocIdsForQuery(@Suspended final AsyncResponse asyncResponse,
 			@DefaultValue("0") @QueryParam("minOverlap") final int nOverlap,
-			@QueryParam("term") final List<String> query) throws IOException{
-	    asyncResponse.setTimeoutHandler(new TimeoutHandler() {
-	    	
-	        public void handleTimeout(AsyncResponse asyncResponse) {
-	            asyncResponse.resume(Response.status(Response.Status.SERVICE_UNAVAILABLE)
-	                    .entity("Operation time out.").build());
-	        }
-	    });
-	    asyncResponse.setTimeout(20, TimeUnit.SECONDS);
-	 
-	    new Thread(new Runnable() {
-	 
-	        public void run() {
-	        	int minimumOverlap = nOverlap;
-	        	if (nOverlap > query.size()) {
-	        		asyncResponse.resume(Response.status(Response.Status.BAD_REQUEST)
-	        				.entity("minOverlap has to be between one and the query size").build());
-	        	}
-	        	// by default set it to query.size
-	        	if (nOverlap == 0) {
-	        		minimumOverlap = query.size();
-	        	}
-				try {
-					QueryResultBean result = indexAPI.findNOverlappingDocuments(minimumOverlap, query);
-		            asyncResponse.resume(result);
-				} catch (IOException e) {
-					asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-							.entity("Internal error, please repeat").build());
-				}
-	        }
-	    }).start();
+			@QueryParam("term") final Set<String> query,
+			@Context SecurityContext securityContext) throws IOException {
+				
+		/* check for ill formed queries */
+		if (query.size() < nOverlap) {
+			asyncResponse.resume(Response.status(Response.Status.BAD_REQUEST)
+					.entity("minOverlap is bigger than the number of terms provided").build());
+		} 		
+		
+		this.performAsyncRequest(
+				asyncResponse,
+				new QueryDocumentsRequest(indexAPI.getSearcher(), query, nOverlap),
+				securityContext);
 	}
 }
