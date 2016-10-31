@@ -17,7 +17,7 @@ import javax.ws.rs.core.Response;
 import ch.eth.ir.indexserver.server.response.DocumentVectorBatchResponse;
 import ch.eth.ir.indexserver.server.response.QueryResultResponse;
 
-public class Main {
+public class TestClient {
 	public static void main(String[] args) {
 		if (args.length != 2 || args[0].length()>100 || args[1].length()>100) {
 			System.out.println("usage client <url> <token>");

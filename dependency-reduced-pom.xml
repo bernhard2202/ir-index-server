@@ -21,7 +21,7 @@
               <transformers>
                 <transformer />
                 <transformer>
-                  <mainClass>ch.eth.ir.indexserver.server.Main</mainClass>
+                  <mainClass>ch.eth.ir.indexserver.server.Server</mainClass>
                 </transformer>
               </transformers>
             </configuration>

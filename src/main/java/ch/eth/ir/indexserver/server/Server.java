@@ -14,39 +14,39 @@ import ch.eth.ir.indexserver.server.threadpool.ThreadPoolMonitor;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-/**
- * Main class for starting  the server
- */
-public class Main {
+import java.util.concurrent.TimeUnit;
 
+/**
+ * Main class for starting the server
+ */
+public class Server {
 
 	private static Logger log = Logger.getLogger(IndexAPI.class);
-	
+
 	public static final String BASE_URI;
-    public static final String protocol;
-    public static final String host;
-    public static final String path;
-    public static final String port;
-   
-    
-    /*
-     * CONFIGURE SERVER HOSTNAME, PORT, ETC HERE:
-     */
-    static {
-        protocol = "http://";
-        host = System.getenv("HOSTNAME");
-        port = System.getenv("PORT");
-        path = "irserver";
-        StringBuffer uri = new StringBuffer(protocol);
-        uri.append(host==null?"localhost":host);
-        uri.append(":");
-        uri.append(port==null?"8080":port);
-        uri.append("/");
-        uri.append(path);
-        uri.append("/");
-        BASE_URI = uri.toString();
-    }
-	
+	public static final String protocol;
+	public static final String host;
+	public static final String path;
+	public static final String port;
+
+	/*
+	 * CONFIGURE SERVER HOSTNAME, PORT, ETC HERE:
+	 */
+	static {
+		protocol = "http://";
+		host = System.getenv("HOSTNAME");
+		port = System.getenv("PORT");
+		path = "irserver";
+		StringBuffer uri = new StringBuffer(protocol);
+		uri.append(host == null ? "localhost" : host);
+		uri.append(":");
+		uri.append(port == null ? "8080" : port);
+		uri.append("/");
+		uri.append(path);
+		uri.append("/");
+		BASE_URI = uri.toString();
+	}
+
 	/**
 	 * Starts Grizzly HTTP server exposing JAX-RS resources defined in this
 	 * application.
@@ -70,35 +70,49 @@ public class Main {
 			System.err.println("ussage: Main <user.properties> <password>");
 			System.exit(-1);
 		}
-		
+
 		File index = new File("./index");
 		File userProperties = new File(args[0]);
 		File indexProperties = new File("./index/index.properties");
-		
+
 		if (!index.exists() || !userProperties.exists() || !indexProperties.exists()) {
 			System.err.println("make suere the following files/directories exist: ");
 			System.err.println("./index/ - index folder");
 			System.err.println("./index/index.properties - index properties");
-			System.err.println(args[0]+" - user properties");
+			System.err.println(args[0] + " - user properties");
 			System.exit(-1);
 		}
-		
-		UserProperties.load(args[0], args[1]); 
-		
+
+		UserProperties.load(args[0], args[1]);
+
 		/* start server and monitoring tool */
-		
+
 		final HttpServer server = startServer();
-		
-		ThreadPoolMonitor monitor = new ThreadPoolMonitor(RequestHandlerPool.getInstance(), 5);
-	    Thread monitorThread = new Thread(monitor);
-	    monitorThread.start();
 
-		log.info(String.format("Jersey app started with WADL available at %s\nHit enter to stop it...", BASE_URI));
-		System.in.read();
+		final ThreadPoolMonitor monitor = new ThreadPoolMonitor(RequestHandlerPool.getInstance(), 5);
+		Thread monitorThread = new Thread(monitor);
+		monitorThread.start();
 
-		RequestHandlerPool.getInstance().shutdownNow();
-		monitor.shutdown();
-		server.shutdownNow();
-		
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				log.warn("SHUTDOWN SIGNAL DETECTED! - shutting down server!");
+				monitor.shutdown();
+
+				RequestHandlerPool.getInstance().shutdownNow();
+				try {
+					RequestHandlerPool.getInstance().awaitTermination(105, TimeUnit.SECONDS);
+				} catch (InterruptedException e) {
+					log.error("Error on shutting down server",e);
+				}
+				server.shutdownNow();		
+				log.info("Shutdown successfull.");
+			}
+		});
+
+		// log.info(String.format("Jersey app started with WADL available at
+		// %s\nHit enter to stop it...", BASE_URI));
+		// System.in.read();
+
 	}
 }
