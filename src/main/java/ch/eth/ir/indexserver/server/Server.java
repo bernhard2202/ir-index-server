@@ -120,9 +120,5 @@ public class Server {
 			}
 		});
 
-		// log.info(String.format("Jersey app started with WADL available at
-		// %s\nHit enter to stop it...", BASE_URI));
-		// System.in.read();
-
 	}
 }
