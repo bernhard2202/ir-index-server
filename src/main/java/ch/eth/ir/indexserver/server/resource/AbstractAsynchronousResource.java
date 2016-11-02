@@ -30,7 +30,9 @@ public abstract class AbstractAsynchronousResource {
 			final AsyncResponse asyncResponse,
 			AbstractAsynchronousRequest<T> request,
 			SecurityContext securityContext) {
+		
 		/* get request priority */
+		
 		int priority = Integer.MAX_VALUE - UserProperties
 				.getRequestsForUser(securityContext.getUserPrincipal().getName());
 		
