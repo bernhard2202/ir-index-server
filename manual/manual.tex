@@ -1,0 +1,239 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc} % LY1 also works
+
+%% Font settings suggested by fbb documentation.
+\usepackage{textcomp} % to get the right copyright, etc.
+\usepackage[lining,tabular]{fbb} % so math uses tabular lining figures
+\usepackage[scaled=.95,type1]{cabin} % sans serif in style of Gill Sans
+\usepackage[varqu,varl]{zi4}% inconsolata typewriter
+\useosf % change normal text to use proportional oldstyle figures
+%\usetosf would provide tabular oldstyle figures in text
+
+\usepackage{microtype}
+
+\usepackage{graphicx}
+\usepackage{enumitem}
+\setlist{leftmargin=*}
+\usepackage{listings}
+\usepackage[os=win]{menukeys}
+\renewmenumacro{\keys}[+]{shadowedroundedkeys}
+\usepackage{framed}
+\usepackage{etoolbox}
+%\AtBeginEnvironment{leftbar}{\sffamily\small}
+
+\usetikzlibrary{chains,arrows,shapes,positioning}
+\usepackage{hyperref}
+
+\newcommand\AutoCalc{\textsf{AutoratingCalculator}}
+\renewcommand\abstractname{IR INDEX SERVER}
+
+\title{IR Index Server - Manual}
+\author{Bernhard Kratzwald \\\url{bernhard.kratzwald@gmail.com}}
+\date{Repository\\\url{https://github.com/bernhard2202/ir-index-server}\\\today}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Student projects in Information Retrieval courses are often limited since building an inverted index of a big text collection takes time, space and is not trivial. Existing APIs also include complex retrieval models which students should implement by themselves rather than reusing. This project wraps a RESTful web service around a lucene\footnote{\url{https://lucene.apache.org}} index. Allowing students to query useful statistics from the index and build their own retrieval models, without having unlimited access to the index. The project is implemented in Java and you will need a Java Runtime Environment ($\geq 1.8$)\footnote{\url{http://java.com/download}} to run it.
+\end{abstract}
+
+\tableofcontents
+\clearpage
+
+\section{Project Overview}
+The project source code can be found on GitHub containing four different executable java classes:\\ \url{https://github.com/bernhard2202/ir-index-server}
+
+\begin{enumerate}
+\item \texttt{TIPSTERCorpusIndexer}: Reads the TIPSTER Collection (or any other text collection structured equally) from the hard disk and builds an inverted index. Furthermore retrieves several statistics which don't change over time and stores them into a file for faster retrieval.
+\item \texttt{UserPropertiesWriter}:Adds, removes or shows users having access to the service. Creates and manages their access tokens and stores them in an encrypted file.
+\item \texttt{Server}: The RESTful java web server allowing users to retrieve statistics and query the index. 
+\item \texttt{TestClient}: A sample client, mainly for stability and load testing of the Server.
+\end{enumerate}
+
+\subsection{Compiling the Code}
+\label{sec:comp}
+To successfully compile the project you need to install an up to date version of JDK. The project was developed under JDK 1.8.0 using Apache Maven\footnote{\url{http://maven.apache.org}} as a project management tool. To build the project run the following command:\\
+
+\begin{leftbar}
+\texttt{mvn clean package}
+\end{leftbar}
+
+Afterwards the \texttt{/target} folder contains both the standard java archive file: \texttt{original-indexserver-<version>.jar} as well as a fat archive including all the dependencies \texttt{indexserver-<version>.jar}. The server is by default the main class of the jar file. To run another class use the \texttt{-cp} argument.
+
+For a detailed explanation how to run/deploy the individual parts (index writer, user manager, server, etc.) see the sections below.
+\clearpage
+
+\section{Building the Index}
+To run the index builder, execute the following class using the fat jar file as build in section~\ref{sec:comp}.
+\begin{leftbar}
+\texttt{ch.eth.ir.indexserver.index.writer.TIPSTERCorpusIndexer}\\
+\texttt{input}: Path to the TIPSTER corpus files\\
+\texttt{output}: Index and statistics written to the \texttt{./index} directory
+\end{leftbar}
+
+The corpus directory has to contain at least one \texttt{.zip} file containing at least one XML-like file to be indexed. The indexer will extract the document number (marked between \texttt{<DOCNO>} tags) as well as the files content (between possibly multiple \texttt{<TEXT>} tags) and ignores the rest of the file. Both document number and content are indexed in different fields. To change this edit the corresponding lines in the \texttt{TIPSTERCorpusIndexer} class.
+After building the index some constant statistics like average document length, unique terms in the collection etc. are extracted and saved into a properties file within the index folder. This is done for performance reasons.
+
+The \texttt{TIPSTERCorpusIndexer} is realized using Appache Lucene (v6.1.0)\footnote{\url{https://lucene.apache.org}} for index building and Dom4J (v1.6.1)\footnote{\url{https://dom4j.github.io}} for XML parsing.
+
+\subsection{FAQ and Troubleshooting}
+\begin{enumerate}
+\item \textbf{I run out of memory?}\\ Run the indexer using more ram, eg. with the \texttt{-Xmx2048m } flag.
+\item \textbf{I added a file do I have to re-index?}\\ Yes, since some statics are extracted and stored into a separate file outside lucene, we have to re-index completely every time the corpus changes.
+\item \textbf{Can I change the folder the index gets written to?}\\ Yes, look at \texttt{ch.eth.ir.indexserver.index.IndexConstants}.
+\item \textbf{How long does it take to index the TIPSTER collection?}\\ This is strongly dependent on the machine and should reach from 1.5 hours to 30 minutes. To see progress enable log4j at INFO level.
+\item \textbf{Is a stop word filter used? Can I change pre-processing?} Yes, Lucene's \texttt{StandardAnalyzer} is used applying simple pre-processing and stop word filtering. It is possible to use any (existing or custom) Analyzer for reprocessing just remember to change it not only in the indexer but also in the server's \texttt{IndexApi}.
+\end{enumerate}
+
+\section{Managing Users}
+To manage users run the following class using the fat jar file as build in section~\ref{sec:comp}.
+\begin{leftbar}
+\texttt{ch.eth.ir.indexserver.server.utilities.UserPropertiesWriter}\\
+\texttt{input}: Path to the \texttt{users.properties} file and the password to open it
+\end{leftbar}
+
+The user manager opens, reads and writes the encrypted properties file containing all users and their access keys. A valid access key needs to be provided by the users in order to query the index. The user manager works as a command line tool and accepts the following commands: 
+\begin{itemize}
+\item \texttt{persist} persist the users to the configuration file
+\item \texttt{print} print all users and their corresponding keys 
+\item \texttt{add <name>} adds a new user with the given name and generates a new key for her/him
+\item \texttt{refresh <*|username>} generate a new token for the given user, or for all users if \texttt{'*'} is used instead of a username 
+\item \texttt{remove <*|username>} remove the given user, or all users if \texttt{'*'} is used instead of a username
+\item \texttt{help} print a help message 
+\item \texttt{exit} closes the program \textbf{without} persisting changes
+\end{itemize}
+
+The user manager writes the usernames and their access tokens to an encrypted properties file. For reading and writing encrypted files we use Jasypt (v 1.9.2)\footnote{\url{http://www.jasypt.org}}. The passwords are encrypted by \texttt{PBEWithMD5AndDES} with a block and salt size of 8 bytes.
+
+\section{Index Server}
+To run the server it is enough to run the fat jar file as build in section~\ref{sec:comp} since the server class is the main class within the jar by default. Otherwise you can select it manually as follows:
+\begin{leftbar}
+\texttt{ch.eth.ir.indexserver.server.Server}\\
+\texttt{input}: path to the \texttt{user.properties} file and the password to read it
+\end{leftbar}
+
+The RESTful web server was build using the Jersey API (v2.23)\footnote{\url{https://jersey.java.net}} and runs inside a lightweight Grizzley HTTP Server (v2.3.23)\footnote{\url{https://grizzly.java.net}}
+
+\subsection{Functionality}
+Currently the server provides the following functionality (the \texttt{'*'} marks asynchronous requests which are prioritized according to user statistics - see section~\ref{ch:upriority}):
+
+\subsubsection{Document}
+\begin{itemize}
+
+\item \textbf{Document Vector*:} Returns a document vector (terms and number of occurrences within the document) for a given document ID. Supports batch requests with multiple document IDs. Returns an error if one document ID is out of range or the batch size exceeds the limit (see section~\ref{ch:performance}).
+\begin{leftbar}
+Example:\\
+\texttt{http://localhost:8080/irserver/document/vector?id=107803\&id=456}
+\end{leftbar}
+
+\item \textbf{Average Document Length:} Returns the average length of a document within the collection.
+\begin{leftbar}
+Example:\\
+\texttt{http://localhost:8080/irserver/document/average-length}
+\end{leftbar}
+
+\item \textbf{Document Count:} Returns the total number of documents in the index. Also defines the range of valid document IDs since, all documents are having continuous IDs between zero and the total number of documents.
+\begin{leftbar}
+Example:\\
+\texttt{http://localhost:8080/irserver/document/count}
+\end{leftbar}
+\end{itemize}
+
+\subsubsection{Index}
+
+\begin{itemize}
+\item \textbf{Query*:} Issues a query against the index and returns a list of matching document IDs. The query contains a list of $m$ terms as well as a parameter $n$ where $n \leq m$, specifying how many of the given $m$ terms should be in a document in order to count as a match.
+
+\textbf{Be aware:} extensive queries using many common words and setting $n$ equal to 1 would return almost the entire collection. Multiple clients constantly submitting such requests could easily DOS the server, therefore there is an upper bound on the results of such queries (see section~\ref{ch:performance} - 'Performance Tuning').
+\begin{leftbar}
+Example:\\
+\texttt{http://localhost:8080/irserver/index/query?term=russia\&term=usa\&minOverlap=1}
+\end{leftbar}
+\end{itemize}
+
+\subsubsection{Preprocessing}
+
+\begin{itemize}
+\item \textbf{Pre-Process Query:} Given a query as a string, apply the same pre-processing (ie. make lower case and remove stop words) as was applied to documents when creating the index, and return a list of the processed tokens. 
+\begin{leftbar}
+Example:\\
+\texttt{http://localhost:8080/irserver/preprocess?query=who\%20is\%20president}
+\end{leftbar}
+
+\end{itemize}
+
+\subsubsection{Terms}
+
+\begin{itemize}
+
+\item \textbf{Number of Unique Tokens:} Returns the number of unique tokens in the index.
+\begin{leftbar}
+Example:\\
+\texttt{http://localhost:8080/irserver/term/unique}
+\end{leftbar}
+
+\item \textbf{Number of Tokens:} Returns the total number of tokens in the index.
+\begin{leftbar}
+Example:\\
+\texttt{http://localhost:8080/irserver/term/total}
+\end{leftbar}
+
+\item \textbf{Document Frequency*:} Returns the document frequency of a given token. Supports batch requests with multiple tokens. Returns an error the batch size exceeds the limit (see section~\ref{ch:performance}).
+\begin{leftbar}
+Example:\\
+\texttt{http://localhost:8080/irserver/term/df?term=obama\&term=usa}
+\end{leftbar}
+
+\item \textbf{Collection Frequency*:} Returns the collection frequency of a given token. Supports batch requests with multiple tokens. Returns an error the batch size exceeds the limit (see section~\ref{ch:performance}).
+\begin{leftbar}
+Example:\\
+\texttt{http://localhost:8080/irserver/term/cf?term=obama\&term=usa}
+\end{leftbar}
+
+\end{itemize}
+
+\subsection{Request Handling and Priority}
+\label{ch:upriority}
+All time intensive requests which are accessing the index run asynchronously. Therefore they are put on a priority queue and processed by a thread pool on the server. 
+
+The request priority is inverse proportional to the number of request a user has issued so far. To change the prioritization edit the class \texttt{AbstractAsynchronousResource}. Priorities are reset every day, exactly 24 hours after start up, which can be changed in the server's main class.
+
+\subsection{Performance Tuning}
+\label{ch:performance}
+To improve performance its strongly recommended to increase the memory size using the \texttt{-Xmx} flag when executing the server. Furthermore there are several parameters in the class \texttt{ServerProperties} which should be adjusted to the server's actual physical capacity: 
+\begin{enumerate}
+\item \texttt{MAX\_BATCH\_REQ\_ALLOWED}: upper bound on the size of batch requests (eg. a user can request 100 document vectors in a single request). 
+\item \texttt{MAX\_SEARCH\_RESULTS}: upper bound on search results returned when issuing a query. Sophisticated queries could have the entire collection as a result. Since we are using a real retrieval model for those queries we have to shuffle results before returning them to the users - to avoid exposing rankings. Since shuffling a list of a million integer takes both a lot of time and memory we want an upper bound on this.
+\item \texttt{CORE\_POOL\_SIZE}: Core size of the thread pool working on asynchronous requests.
+\item \texttt{MAX\_POOL\_SIZE}: Maximum size of the thread pool working on asynchronous requests.
+\item \texttt{THREAD\_KEEP\_ALLIVE\_TIME}: Number of seconds after which idle threads should be removed from the pool. 
+\item \texttt{TIMEOUT}: Number of seconds after which any request on the server times out and returns with a \texttt{408 Request Time-out} response.
+\end{enumerate}
+
+\subsection{Security}
+The access control is implemented in the \texttt{AuthenticationFilter} class. Requests have to be provided with a HTTP Authorization header of the form: \texttt{"Bearer <token>"}. To ensure that a  resource can only be accessed by users having a valid token its enough to add a \texttt{@Secured} annotation to the class or method. \textbf{Be aware} that using HTTP (as right now) allows sniffing and spoofing other user's tokens.
+
+\subsection{FAQ and Troubleshooting}
+\begin{enumerate}
+\item \textbf{How to enable logging?} To enable logging simply provide the \texttt{log4j} configuration file at start up using the \texttt{-Dlog4j.configuration} parameter.
+
+\item \textbf{What happens with exceptions?} Custom exceptions result in \texttt{'400 Bad Request'} or \texttt{'401 Unauthorized'} responses. They can be found in the following package: \texttt{ch.eth.ir.indexserver.server.exception}. All other exceptions are caught and logged. The user responsible for the request sees a \texttt{'501 Internal Server Error'} - see \texttt{CustomExceptionMapper} class for more details.
+
+\item \textbf{Can I change the address or port the server is listening to?} Yes, you can find the corresponding code in the main class of the server.
+
+\item \textbf{How can I shut down the server?} Use 'Ctr+C' or kill the process. The server listens for shutdown hooks and shuts down server and thread pool in a clear way. 
+
+\item \textbf{Is there any information lost on a restart?} No besides the request priorities which will automatically initialize to a maximum priority on startup.
+
+\end{enumerate}
+
+\section{Client}
+The client is a very simple implementation used for load and stability testing. It constantly requests a batch request of a hundred random document IDs. Then it picks three random terms from the retrieved document vectors, querying all documents containing at least one of those three. After termination, the client prints how many requests succeeded, failed and their average response times. To execute the client run the following class using the fat jar file as build in section~\ref{sec:comp}:
+\begin{leftbar}
+\texttt{ch.eth.ir.indexserver.client.TestClient}\\
+\texttt{input}: Base URL to the server and access token
+\end{leftbar}
+
+\end{document}
