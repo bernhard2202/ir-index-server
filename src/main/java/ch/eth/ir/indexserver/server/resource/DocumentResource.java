@@ -15,6 +15,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 
 import ch.eth.ir.indexserver.index.IndexAPI;
+import ch.eth.ir.indexserver.index.IndexConstants;
 import ch.eth.ir.indexserver.server.config.ServerProperties;
 import ch.eth.ir.indexserver.server.exception.BatchLimitExceededException;
 import ch.eth.ir.indexserver.server.exception.IllegalDocumentIdentifierException;
@@ -56,6 +57,15 @@ public class DocumentResource extends AbstractAsynchronousResource {
 				asyncResponse,
 				new TermVectorsBatchRequest(indexAPI.getReader(), ids),
 				securityContext);
+	}
+	
+	@GET
+	@Path("name") 
+	public String getDocumentName(@QueryParam("id") int id) throws IOException {
+		if (id < 0 || id >= indexAPI.getMaxDocId()) {
+			throw new IllegalDocumentIdentifierException();
+		}
+		return indexAPI.getReader().document(id).get(IndexConstants.TITLE);
 	}
 	
 	@GET
