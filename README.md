@@ -5,3 +5,6 @@ Student projects in Information Retrieval courses are often limited since buildi
 The project is implemented in Java and you will need a Java Runtime Environment (1.8)to run it.
 
 See ./manual for documentation.
+
+
+(I do lack time to properly maintain and update this project, but feel free to contribute and make PR.)
